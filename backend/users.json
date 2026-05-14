@@ -1,0 +1,45 @@
+[
+  {
+    "id": 1,
+    "email": "admin@entreprise.com",
+    "password": "admin",
+    "role": "directeur",
+    "nom": "Direction Générale",
+    "poste": "Directeur",
+    "salaire": "-",
+    "statut": "Actif"
+  },
+  {
+    "id": 1776388097195,
+    "email": "medmohamed@gmail.com",
+    "password": "1234",
+    "nom": "elkhair mohamed",
+    "poste": "comptable",
+    "role": "employe",
+    "salaire": "10000",
+    "statut": "Actif",
+    "canEdit": true
+  },
+  {
+    "id": 1776401438506,
+    "email": "dialloalpha@gmail.com",
+    "password": "1234",
+    "nom": "alpha Diallo oumar",
+    "poste": "vendeur",
+    "role": "employe",
+    "salaire": "5000",
+    "statut": "Actif",
+    "canEdit": false
+  },
+  {
+    "id": 1776405129940,
+    "email": "tech_1776405114538@interne.local",
+    "password": "NO_LOGIN",
+    "nom": "aicha",
+    "poste": "Technicien de Surface",
+    "role": "technicien_surface",
+    "salaire": "3500",
+    "statut": "Actif",
+    "canEdit": false
+  }
+]

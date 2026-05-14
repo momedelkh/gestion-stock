@@ -1,0 +1,152 @@
+[
+  {
+    "id": 1776388319387,
+    "date": "2026-04-17T01:11:59.387Z",
+    "action": "A vendu 1 unité de : mbourou",
+    "user": "medmohamed@gmail.com"
+  },
+  {
+    "id": 1776388321299,
+    "date": "2026-04-17T01:12:01.299Z",
+    "action": "A vendu 1 unité de : cgiougouglj",
+    "user": "medmohamed@gmail.com"
+  },
+  {
+    "id": 1776388322579,
+    "date": "2026-04-17T01:12:02.579Z",
+    "action": "A vendu 1 unité de : mbourou",
+    "user": "medmohamed@gmail.com"
+  },
+  {
+    "id": 1776390164370,
+    "date": "2026-04-17T01:42:44.370Z",
+    "action": "A vendu 1 unité de : mbourou",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1776391462730,
+    "date": "2026-04-17T02:04:22.730Z",
+    "action": "A exporté la base de données en CSV",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1776401254416,
+    "date": "2026-04-17T04:47:34.416Z",
+    "action": "A vendu 1 unité de : mbourou",
+    "user": "medmohamed@gmail.com"
+  },
+  {
+    "id": 1776401255060,
+    "date": "2026-04-17T04:47:35.060Z",
+    "action": "A vendu 1 unité de : mbourou",
+    "user": "medmohamed@gmail.com"
+  },
+  {
+    "id": 1776401255240,
+    "date": "2026-04-17T04:47:35.240Z",
+    "action": "A vendu 1 unité de : mbourou",
+    "user": "medmohamed@gmail.com"
+  },
+  {
+    "id": 1776401255442,
+    "date": "2026-04-17T04:47:35.442Z",
+    "action": "A vendu 1 unité de : mbourou",
+    "user": "medmohamed@gmail.com"
+  },
+  {
+    "id": 1776401835369,
+    "date": "2026-04-17T04:57:15.369Z",
+    "action": "A vendu 10 unité(s) de : mbourou",
+    "user": "dialloalpha@gmail.com"
+  },
+  {
+    "id": 1776401881078,
+    "date": "2026-04-17T04:58:01.078Z",
+    "action": "A vendu 10 unité(s) de : mbourou",
+    "user": "dialloalpha@gmail.com"
+  },
+  {
+    "id": 1776402431118,
+    "date": "2026-04-17T05:07:11.118Z",
+    "action": "A validé un panier d'achat : 2 ligne(s) pour 3100 FCFA",
+    "user": "dialloalpha@gmail.com"
+  },
+  {
+    "id": 1776403658584,
+    "date": "2026-04-17T05:27:38.584Z",
+    "action": "A modifié la fiche du produit : mbourou",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1776403692517,
+    "date": "2026-04-17T05:28:12.517Z",
+    "action": "A modifié la fiche du produit : cgiougouglj",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1776404941081,
+    "date": "2026-04-17T05:49:01.081Z",
+    "action": "A validé un panier d'achat : 2 ligne(s) pour 1550 FCFA",
+    "user": "dialloalpha@gmail.com"
+  },
+  {
+    "id": 1776405735353,
+    "date": "2026-04-17T06:02:15.353Z",
+    "action": "A référencé un nouveau produit : tomate",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1776405805921,
+    "date": "2026-04-17T06:03:25.921Z",
+    "action": "A validé un panier d'achat : 3 ligne(s) pour 4550 FCFA",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1776408206683,
+    "date": "2026-04-17T06:43:26.683Z",
+    "action": "A validé un panier d'achat : 1 ligne(s) pour 450 FCFA",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1776408495427,
+    "date": "2026-04-17T06:48:15.427Z",
+    "action": "A référencé un nouveau produit : ordinateur hp",
+    "user": "medmohamed@gmail.com"
+  },
+  {
+    "id": 1776408520482,
+    "date": "2026-04-17T06:48:40.482Z",
+    "action": "A validé un panier d'achat : 2 ligne(s) pour 264500 FCFA",
+    "user": "medmohamed@gmail.com"
+  },
+  {
+    "id": 1776408587755,
+    "date": "2026-04-17T06:49:47.755Z",
+    "action": "A validé un panier d'achat : 1 ligne(s) pour 750 FCFA",
+    "user": "dialloalpha@gmail.com"
+  },
+  {
+    "id": 1776477535639,
+    "date": "2026-04-18T01:58:55.639Z",
+    "action": "A validé un panier d'achat : 1 ligne(s) pour 260000 FCFA",
+    "user": "medmohamed@gmail.com"
+  },
+  {
+    "id": 1776542323078,
+    "date": "2026-04-18T19:58:43.078Z",
+    "action": "A validé un panier d'achat : 2 ligne(s) pour 1650 FCFA",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1776542465926,
+    "date": "2026-04-18T20:01:05.926Z",
+    "action": "A validé un panier d'achat : 1 ligne(s) pour 260000 FCFA",
+    "user": "medmohamed@gmail.com"
+  },
+  {
+    "id": 1776542748330,
+    "date": "2026-04-18T20:05:48.330Z",
+    "action": "A référencé un nouveau produit : farine malika 25kg",
+    "user": "admin@entreprise.com"
+  }
+]
