@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { t } from "../i18n";
 
 function CRM() {
-    const API = process.env.REACT_APP_API_URL || "http://127.0.0.1:5000";
+    const API = process.env.REACT_APP_API_URL || "https://gestion-stock-backend-xs74.onrender.com";
 
     const [clients, setClients] = useState([]);
     const [nom, setNom] = useState("");

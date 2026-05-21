@@ -9,7 +9,7 @@ function Login() {
 
     const login = async () => {
         try {
-            const API = process.env.REACT_APP_API_URL || "http://127.0.0.1:5000";
+            const API = process.env.REACT_APP_API_URL || "https://gestion-stock-backend-xs74.onrender.com";
             const res = await fetch(`${API}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
