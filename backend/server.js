@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
+const mongoose = require("mongoose");
 
 const app = express();
 
@@ -11,201 +11,264 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Set a higher limit for JSON parsing if images are passed as base64 strings
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-const FILE = "./data.json";
-const USERS_FILE = "./users.json";
-const LOGS_FILE = "./logs.json";
-const ALERTS_FILE = "./alerts.json";
-const CLIENTS_FILE = "./clients.json";
-const COMMANDES_FILE = "./commandes.json";
+// ======================= CONNEXION MONGODB =======================
+const MONGODB_URI = process.env.MONGODB_URI;
 
-// lire données
-const readData = () => JSON.parse(fs.readFileSync(FILE));
-const writeData = (data) => fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log("✅ Connecté à MongoDB Atlas"))
+  .catch(err => {
+    console.error("❌ Erreur connexion MongoDB :", err.message);
+    process.exit(1);
+  });
 
-const readUsers = () => {
-    if(!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '[]');
-    return JSON.parse(fs.readFileSync(USERS_FILE));
-};
-const writeUsers = (data) => fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2));
+// ======================= SCHEMAS MONGOOSE =======================
+const produitSchema = new mongoose.Schema({}, { strict: false });
+const userSchema = new mongoose.Schema({}, { strict: false });
+const logSchema = new mongoose.Schema({}, { strict: false });
+const alertSchema = new mongoose.Schema({}, { strict: false });
+const clientSchema = new mongoose.Schema({}, { strict: false });
+const commandeSchema = new mongoose.Schema({}, { strict: false });
 
-const readLogs = () => {
-    if(!fs.existsSync(LOGS_FILE)) fs.writeFileSync(LOGS_FILE, '[]');
-    return JSON.parse(fs.readFileSync(LOGS_FILE));
-};
-const writeLogs = (data) => fs.writeFileSync(LOGS_FILE, JSON.stringify(data, null, 2));
-
-const readAlerts = () => {
-    if(!fs.existsSync(ALERTS_FILE)) fs.writeFileSync(ALERTS_FILE, '[]');
-    return JSON.parse(fs.readFileSync(ALERTS_FILE));
-};
-const writeAlerts = (data) => fs.writeFileSync(ALERTS_FILE, JSON.stringify(data, null, 2));
-
-const readClients = () => {
-    if(!fs.existsSync(CLIENTS_FILE)) fs.writeFileSync(CLIENTS_FILE, '[]');
-    return JSON.parse(fs.readFileSync(CLIENTS_FILE));
-};
-const writeClients = (data) => fs.writeFileSync(CLIENTS_FILE, JSON.stringify(data, null, 2));
-
-const readCommandes = () => {
-    if(!fs.existsSync(COMMANDES_FILE)) fs.writeFileSync(COMMANDES_FILE, '[]');
-    return JSON.parse(fs.readFileSync(COMMANDES_FILE));
-};
-const writeCommandes = (data) => fs.writeFileSync(COMMANDES_FILE, JSON.stringify(data, null, 2));
+const Produit = mongoose.model("Produit", produitSchema, "produits");
+const User = mongoose.model("User", userSchema, "users");
+const Log = mongoose.model("Log", logSchema, "logs");
+const Alert = mongoose.model("Alert", alertSchema, "alerts");
+const Client = mongoose.model("Client", clientSchema, "clients");
+const Commande = mongoose.model("Commande", commandeSchema, "commandes");
 
 // ======================= PRODUITS =======================
-app.get("/produits", (req, res) => res.json(readData()));
+app.get("/produits", async (req, res) => {
+  try {
+    const produits = await Produit.find({}, { __v: 0 }).lean();
+    // Convertir _id MongoDB en id numérique pour compatibilité frontend
+    const result = produits.map(p => ({ ...p, id: p.id || p._id.toString() }));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-app.post("/ajouter", (req, res) => {
-    const produits = readData();
-    const nouveau = { id: Date.now(), ...req.body };
-    produits.push(nouveau);
-    writeData(produits);
+app.post("/ajouter", async (req, res) => {
+  try {
+    const nouveau = new Produit({ id: Date.now(), ...req.body });
+    await nouveau.save();
     res.send("OK");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get("/supprimer/:id", (req, res) => {
-    let produits = readData();
-    produits = produits.filter(p => p.id != req.params.id);
-    writeData(produits);
+app.get("/supprimer/:id", async (req, res) => {
+  try {
+    await Produit.deleteOne({ id: Number(req.params.id) });
     res.send("Supprimé");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post("/modifier/:id", (req, res) => {
-    let produits = readData();
-    produits = produits.map(p => p.id == req.params.id ? { ...p, ...req.body } : p);
-    writeData(produits);
+app.post("/modifier/:id", async (req, res) => {
+  try {
+    await Produit.updateOne({ id: Number(req.params.id) }, { $set: req.body });
     res.send("Modifié");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ======================= UTILISATEURS (RH) =======================
-app.post("/login", (req, res) => {
-    const users = readUsers();
-    const user = users.find(u => u.email === req.body.email && u.password === req.body.password);
+app.post("/login", async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email, password: req.body.password }).lean();
     if (user) {
-        if (user.role === "technicien_surface") {
-            return res.status(403).json({ success: false, message: "Accès refusé. Profil non autorisé au système informatique." });
-        }
-        res.json({ success: true, email: user.email, role: user.role, canEdit: user.canEdit });
+      if (user.role === "technicien_surface") {
+        return res.status(403).json({ success: false, message: "Accès refusé. Profil non autorisé au système informatique." });
+      }
+      res.json({ success: true, email: user.email, role: user.role, canEdit: user.canEdit });
     } else {
-        res.status(401).json({ success: false, message: "Identifiants incorrects" });
+      res.status(401).json({ success: false, message: "Identifiants incorrects" });
     }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get("/users", (req, res) => res.json(readUsers()));
+app.get("/users", async (req, res) => {
+  try {
+    const users = await User.find({}, { __v: 0 }).lean();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-app.post("/users/ajouter", (req, res) => {
-    const users = readUsers();
-    if (users.find(u => u.email === req.body.email)) {
-        return res.status(400).json({ error: "Email déjà utilisé" });
-    }
-    const nouveau = { id: Date.now(), ...req.body };
-    users.push(nouveau);
-    writeUsers(users);
+app.post("/users/ajouter", async (req, res) => {
+  try {
+    const existing = await User.findOne({ email: req.body.email });
+    if (existing) return res.status(400).json({ error: "Email déjà utilisé" });
+    const nouveau = new User({ id: Date.now(), ...req.body });
+    await nouveau.save();
     res.send("OK");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post("/users/modifier/:id", (req, res) => {
-    let users = readUsers();
-    users = users.map(u => u.id == req.params.id ? { ...u, ...req.body } : u);
-    writeUsers(users);
+app.post("/users/modifier/:id", async (req, res) => {
+  try {
+    await User.updateOne({ id: Number(req.params.id) }, { $set: req.body });
     res.send("Modifié");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ======================= LOGS (TRAÇABILITÉ) =======================
-app.get("/logs", (req, res) => res.json(readLogs()));
+app.get("/logs", async (req, res) => {
+  try {
+    const logs = await Log.find({}, { __v: 0 }).lean();
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-app.post("/logs", (req, res) => {
-    const logs = readLogs();
-    const nouveau = {
-        id: Date.now(),
-        date: new Date().toISOString(),
-        type: req.body.type || "action",  // Types: entree, sortie, vente, modification, suppression, action
-        produit: req.body.produit || null,
-        quantite: req.body.quantite || null,
-        ...req.body
-    };
-    logs.push(nouveau);
-    writeLogs(logs);
+app.post("/logs", async (req, res) => {
+  try {
+    const nouveau = new Log({
+      id: Date.now(),
+      date: new Date().toISOString(),
+      type: req.body.type || "action",
+      produit: req.body.produit || null,
+      quantite: req.body.quantite || null,
+      ...req.body
+    });
+    await nouveau.save();
     res.send("OK");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ======================= ALERTES (MANAGER) =======================
-app.get("/alerts", (req, res) => res.json(readAlerts()));
-
-app.post("/alerts", (req, res) => {
-    const alerts = readAlerts();
-    alerts.push({ id: Date.now(), date: new Date().toISOString(), ...req.body });
-    writeAlerts(alerts);
-    res.send("OK");
+app.get("/alerts", async (req, res) => {
+  try {
+    const alerts = await Alert.find({}, { __v: 0 }).lean();
+    res.json(alerts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get("/alerts/supprimer/:id", (req, res) => {
-    let alerts = readAlerts();
-    alerts = alerts.filter(a => a.id != req.params.id);
-    writeAlerts(alerts);
+app.post("/alerts", async (req, res) => {
+  try {
+    const nouveau = new Alert({ id: Date.now(), date: new Date().toISOString(), ...req.body });
+    await nouveau.save();
+    res.send("OK");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/alerts/supprimer/:id", async (req, res) => {
+  try {
+    await Alert.deleteOne({ id: Number(req.params.id) });
     res.send("Supprimé");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ======================= CLIENTS (CRM) =======================
-app.get("/clients", (req, res) => res.json(readClients()));
+app.get("/clients", async (req, res) => {
+  try {
+    const clients = await Client.find({}, { __v: 0 }).lean();
+    res.json(clients);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-app.post("/clients/ajouter", (req, res) => {
-    const clients = readClients();
-    const nouveau = { id: Date.now(), ...req.body };
-    clients.push(nouveau);
-    writeClients(clients);
+app.post("/clients/ajouter", async (req, res) => {
+  try {
+    const nouveau = new Client({ id: Date.now(), ...req.body });
+    await nouveau.save();
     res.send("OK");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post("/clients/modifier/:id", (req, res) => {
-    let clients = readClients();
-    clients = clients.map(c => c.id == req.params.id ? { ...c, ...req.body } : c);
-    writeClients(clients);
+app.post("/clients/modifier/:id", async (req, res) => {
+  try {
+    await Client.updateOne({ id: Number(req.params.id) }, { $set: req.body });
     res.send("Modifié");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get("/clients/supprimer/:id", (req, res) => {
-    let clients = readClients();
-    clients = clients.filter(c => c.id != req.params.id);
-    writeClients(clients);
+app.get("/clients/supprimer/:id", async (req, res) => {
+  try {
+    await Client.deleteOne({ id: Number(req.params.id) });
     res.send("Supprimé");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ======================= COMMANDES FOURNISSEURS =======================
-app.get("/commandes", (req, res) => res.json(readCommandes()));
+app.get("/commandes", async (req, res) => {
+  try {
+    const commandes = await Commande.find({}, { __v: 0 }).lean();
+    res.json(commandes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-app.post("/commandes/ajouter", (req, res) => {
-    const commandes = readCommandes();
-    const nouveau = {
-        id: Date.now(),
-        dateCreation: new Date().toISOString(),
-        statut: "En attente",
-        ...req.body
-    };
-    commandes.push(nouveau);
-    writeCommandes(commandes);
+app.post("/commandes/ajouter", async (req, res) => {
+  try {
+    const nouveau = new Commande({
+      id: Date.now(),
+      dateCreation: new Date().toISOString(),
+      statut: "En attente",
+      ...req.body
+    });
+    await nouveau.save();
     res.send("OK");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post("/commandes/modifier/:id", (req, res) => {
-    let commandes = readCommandes();
-    commandes = commandes.map(c => c.id == req.params.id ? { ...c, ...req.body } : c);
-    writeCommandes(commandes);
+app.post("/commandes/modifier/:id", async (req, res) => {
+  try {
+    await Commande.updateOne({ id: Number(req.params.id) }, { $set: req.body });
     res.send("Modifié");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get("/commandes/supprimer/:id", (req, res) => {
-    let commandes = readCommandes();
-    commandes = commandes.filter(c => c.id != req.params.id);
-    writeCommandes(commandes);
+app.get("/commandes/supprimer/:id", async (req, res) => {
+  try {
+    await Commande.deleteOne({ id: Number(req.params.id) });
     res.send("Supprimé");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================= ROUTE SANTÉ =======================
+app.get("/", (req, res) => {
+  res.json({ status: "OK", message: "Gestion Stock API en ligne 🚀" });
 });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Serveur JSON lancé sur le port ${PORT}`);
+  console.log(`Serveur lancé sur le port ${PORT}`);
 });

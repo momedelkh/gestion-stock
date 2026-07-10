@@ -148,5 +148,311 @@
     "date": "2026-04-18T20:05:48.330Z",
     "action": "A référencé un nouveau produit : farine malika 25kg",
     "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783186920043,
+    "date": "2026-07-04T17:42:00.043Z",
+    "type": "suppression",
+    "produit": "mbourou",
+    "quantite": 83,
+    "action": "A supprimé le produit : mbourou",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783186922506,
+    "date": "2026-07-04T17:42:02.506Z",
+    "type": "suppression",
+    "produit": "cgiougouglj",
+    "quantite": 95,
+    "action": "A supprimé le produit : cgiougouglj",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783186925577,
+    "date": "2026-07-04T17:42:05.577Z",
+    "type": "suppression",
+    "produit": "tomate",
+    "quantite": 1,
+    "action": "A supprimé le produit : tomate",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783186927659,
+    "date": "2026-07-04T17:42:07.659Z",
+    "type": "suppression",
+    "produit": "ordinateur hp",
+    "quantite": 2,
+    "action": "A supprimé le produit : ordinateur hp",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783186930731,
+    "date": "2026-07-04T17:42:10.731Z",
+    "type": "suppression",
+    "produit": "farine malika 25kg",
+    "quantite": "100",
+    "action": "A supprimé le produit : farine malika 25kg",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783217390442,
+    "date": "2026-07-05T02:09:50.442Z",
+    "type": "entree",
+    "produit": "PC Portable LENOVO IdeaPad Slim 3 15IRH8 i5 13è Gén 16G 512G SSD Gris",
+    "quantite": "20",
+    "action": "A référencé un nouveau produit : PC Portable LENOVO IdeaPad Slim 3 15IRH8 i5 13è Gén 16G 512G SSD Gris",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783217669561,
+    "date": "2026-07-05T02:14:29.561Z",
+    "type": "entree",
+    "produit": "Pc de Bureau HP Pro 290 G9 I5 12ème Gén 8G 512G",
+    "quantite": "6",
+    "action": "A référencé un nouveau produit : Pc de Bureau HP Pro 290 G9 I5 12ème Gén 8G 512G",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783217887174,
+    "date": "2026-07-05T02:18:07.174Z",
+    "type": "entree",
+    "produit": "PC Portable Gamer LENOVO LOQ 15IAX9 i5 12ème Gén 16G 512G RTX 2050",
+    "quantite": "12",
+    "action": "A référencé un nouveau produit : PC Portable Gamer LENOVO LOQ 15IAX9 i5 12ème Gén 16G 512G RTX 2050",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218061947,
+    "date": "2026-07-05T02:21:01.947Z",
+    "type": "entree",
+    "produit": "PC Portable DELL VOSTRO G15 3530 i7 13è Gén 8G 512G",
+    "quantite": "30",
+    "action": "A référencé un nouveau produit : PC Portable DELL VOSTRO G15 3530 i7 13è Gén 8G 512G",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218256030,
+    "date": "2026-07-05T02:24:16.030Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218256210,
+    "date": "2026-07-05T02:24:16.210Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218256410,
+    "date": "2026-07-05T02:24:16.410Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218256577,
+    "date": "2026-07-05T02:24:16.577Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218256766,
+    "date": "2026-07-05T02:24:16.766Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218256961,
+    "date": "2026-07-05T02:24:16.961Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218257163,
+    "date": "2026-07-05T02:24:17.163Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218257353,
+    "date": "2026-07-05T02:24:17.353Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218257546,
+    "date": "2026-07-05T02:24:17.546Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218257760,
+    "date": "2026-07-05T02:24:17.760Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218257949,
+    "date": "2026-07-05T02:24:17.949Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218258127,
+    "date": "2026-07-05T02:24:18.127Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218258308,
+    "date": "2026-07-05T02:24:18.308Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218258516,
+    "date": "2026-07-05T02:24:18.516Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218258712,
+    "date": "2026-07-05T02:24:18.712Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218258929,
+    "date": "2026-07-05T02:24:18.929Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218259123,
+    "date": "2026-07-05T02:24:19.123Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218259329,
+    "date": "2026-07-05T02:24:19.329Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218259530,
+    "date": "2026-07-05T02:24:19.530Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218259719,
+    "date": "2026-07-05T02:24:19.719Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218259928,
+    "date": "2026-07-05T02:24:19.928Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218260127,
+    "date": "2026-07-05T02:24:20.127Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218260520,
+    "date": "2026-07-05T02:24:20.520Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218260814,
+    "date": "2026-07-05T02:24:20.814Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
+  },
+  {
+    "id": 1783218261015,
+    "date": "2026-07-05T02:24:21.015Z",
+    "type": "entree",
+    "produit": "",
+    "quantite": "",
+    "action": "A référencé un nouveau produit : ",
+    "user": "admin@entreprise.com"
   }
 ]
