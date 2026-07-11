@@ -165,6 +165,7 @@ function Mouvements() {
                 </div>
 
                 <div style={panelBody}>
+                    <div className="table-responsive">
                     <table style={table}>
                         <thead>
                             <tr>
@@ -219,6 +220,7 @@ function Mouvements() {
                             )}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>

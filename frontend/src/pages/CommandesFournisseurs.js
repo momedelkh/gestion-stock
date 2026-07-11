@@ -150,7 +150,7 @@ function CommandesFournisseurs() {
             </div>
 
             {/* KPIs */}
-            <div style={{ display: "flex", gap: "15px" }}>
+            <div className="stats-container" style={{ display: "flex", gap: "15px" }}>
                 <div style={{ ...kpiCard, backgroundColor: "#3c8dbc" }}>
                     <div style={kpiNum}>{totalCommandes}</div>
                     <div style={kpiLabel}>Total Commandes</div>
@@ -174,7 +174,7 @@ function CommandesFournisseurs() {
                 <div style={{ ...panel, borderTopColor: "#00a65a" }}>
                     <div style={panelHeader}>➕ Créer une Commande Fournisseur</div>
                     <div style={{ ...panelBody, display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <div style={{ display: "flex", gap: "12px" }}>
+                        <div className="form-row" style={{ display: "flex", gap: "12px" }}>
                             <div style={{ flex: 1 }}>
                                 <label style={labelStyle}>Fournisseur *</label>
                                 <input list="fournisseurs-list" style={input} placeholder="Nom du fournisseur"
@@ -202,7 +202,7 @@ function CommandesFournisseurs() {
                                     value={prixUnitaire} onChange={e => setPrixUnitaire(e.target.value)} />
                             </div>
                         </div>
-                        <div style={{ display: "flex", gap: "12px", alignItems: "flex-end" }}>
+                        <div className="form-row" style={{ display: "flex", gap: "12px", alignItems: "flex-end" }}>
                             <div style={{ flex: 3 }}>
                                 <label style={labelStyle}>Notes / Instructions</label>
                                 <input style={input} placeholder="Délai souhaité, conditions, remarques..."
@@ -240,6 +240,7 @@ function CommandesFournisseurs() {
                     </div>
                 </div>
                 <div style={panelBody}>
+                    <div className="table-responsive">
                     <table style={table}>
                         <thead>
                             <tr>
@@ -314,6 +315,7 @@ function CommandesFournisseurs() {
                             )}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>

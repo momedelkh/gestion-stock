@@ -96,6 +96,7 @@ function RH() {
                     )}
                 </div>
                 <div style={panelBody}>
+                    <div className="table-responsive">
                     <table style={table}>
                         <thead>
                             <tr>
@@ -147,6 +148,7 @@ function RH() {
                             )}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>

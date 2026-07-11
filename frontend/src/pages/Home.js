@@ -453,7 +453,7 @@ function Home() {
                 <span style={{color: "#777", fontSize: "14px"}}>{t("Données Financières et Inventaire")}</span>
             </div>
 
-            <div style={statsContainer}>
+            <div className="stats-container" style={statsContainer}>
                 <div style={statCardBlue}>
                     <div style={{ padding: "15px 20px" }}>
                         <h3 style={statNumber}>{totalProduits}</h3>
@@ -514,7 +514,7 @@ function Home() {
                         {editId && <button style={{border:"none", backgroundColor:"transparent", color:"#999", cursor:"pointer", textDecoration:"underline"}} onClick={reset}>Annuler</button>}
                     </div>
                     <div style={{...panelBody, display: "flex", flexDirection: "column", gap: "10px"}}>
-                        <div style={{display: "flex", gap: "15px"}}>
+                        <div className="form-row" style={{display: "flex", gap: "15px"}}>
                             <input style={{...input, flex: 2}} placeholder={t("Nom du produit")} value={nom} onChange={(e) => setNom(e.target.value)} />
                             <select style={{...input, flex: 1, backgroundColor: "#fff"}} value={categorie} onChange={(e) => setCategorie(e.target.value)}>
                                 <option value="Général">Général</option>
@@ -528,7 +528,7 @@ function Home() {
                             <input style={{...input, flex: 1}} type="number" placeholder={t("Qté initiale")} value={quantite} onChange={(e) => setQuantite(e.target.value)} />
                         </div>
 
-                        <div style={{display: "flex", gap: "15px", alignItems: "center"}}>
+                        <div className="form-row" style={{display: "flex", gap: "15px", alignItems: "center"}}>
                             <input style={{...input, flex: 1}} placeholder={t("Fournisseur")} value={fournisseur} onChange={(e) => setFournisseur(e.target.value)} />
                             <input style={{...input, flex: 1}} placeholder={t("Emplacement")} value={emplacement} onChange={(e) => setEmplacement(e.target.value)} />
                             <input style={{...input, flex: 1, padding: "5px"}} type="file" onChange={(e) => setImage(e.target.files[0])} />
@@ -572,6 +572,7 @@ function Home() {
                             </div>
                         </div>
 
+                        <div className="table-responsive">
                         <table style={table}>
                             <thead>
                                 <tr>
@@ -619,10 +620,12 @@ function Home() {
                                 )}
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 ) : (
                     <div style={panelBody}>
                         <h4 style={{marginTop:0, marginBottom:"15px", color:"#444"}}>Historique des Actions (Audit Trail)</h4>
+                        <div className="table-responsive">
                         <table style={table}>
                             <thead>
                                 <tr>
@@ -646,6 +649,7 @@ function Home() {
                                 )}
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 )}
             </div>

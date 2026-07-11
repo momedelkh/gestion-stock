@@ -114,6 +114,7 @@ function CRM() {
             <div style={{...panel, borderTopColor: "#3c8dbc"}}>
                 <div style={panelHeader}>📋 {t("Base de données Clients Actifs")}</div>
                 <div style={panelBody}>
+                    <div className="table-responsive">
                     <table style={table}>
                         <thead>
                             <tr>
@@ -152,6 +153,7 @@ function CRM() {
                             ))}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>

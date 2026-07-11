@@ -47,10 +47,10 @@ function App() {
       {!user ? (
         <Login />
       ) : (
-        <div style={appContainer}>
+        <div className="app-container" style={appContainer}>
 
           {/* SIDEBAR GAUCHE */}
-          <div style={{ ...sidebar, width: sidebarOpen ? "250px" : "0px", overflow: "hidden", transition: "width 0.3s" }}>
+          <div className={`sidebar-left ${sidebarOpen ? "open" : "closed"}`} style={{ ...sidebar, width: sidebarOpen ? "250px" : "0px", overflow: "hidden", transition: "width 0.3s" }}>
             <div style={{ ...sidebarHeader, flexDirection: "row", padding: "20px 10px", justifyContent: "flex-start", paddingLeft: "15px" }}>
               <span style={{ fontSize: "32px", marginRight: "12px", textShadow: "0 2px 4px rgba(0,0,0,0.3)" }}>📦</span>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: "1.2", whiteSpace: "nowrap" }}>
@@ -99,11 +99,14 @@ function App() {
             </div>
           </div>
 
+          {/* VOLET D'OMBRAGE SUR MOBILE */}
+          {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
           {/* PARTIE PRINCIPALE */}
-          <div style={{ ...mainWrapper, width: sidebarOpen ? "calc(100% - 250px)" : "100%", transition: "width 0.3s" }}>
+          <div className="main-wrapper" style={{ ...mainWrapper, width: sidebarOpen ? "calc(100% - 250px)" : "100%", transition: "width 0.3s" }}>
 
             {/* TOPBAR */}
-            <header style={topbar}>
+            <header className="topbar" style={topbar}>
               <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
                 <div style={{ cursor: "pointer", transition: "all 0.3s", fontSize: "18px" }} onClick={() => setSidebarOpen(!sidebarOpen)}>
                   ☰
@@ -127,7 +130,7 @@ function App() {
             </header>
 
             {/* CONTENU */}
-            <div style={contentArea}>
+            <div className="content-area" style={contentArea}>
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/graphique" element={<Graphique />} />
