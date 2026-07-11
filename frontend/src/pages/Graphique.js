@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 function Graphique() {
-    const API = process.env.REACT_APP_API_URL || "https://gestion-stock-backend-xs74.onrender.com";
+    const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
     const [produits, setProduits] = useState([]);
 
     useEffect(() => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { t } from "../i18n";
 
 function RH() {
-    const API = process.env.REACT_APP_API_URL || "https://gestion-stock-backend-xs74.onrender.com";
+    const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
     const role = localStorage.getItem("role") || "directeur";
 
     const [employes, setEmployes] = useState([]);

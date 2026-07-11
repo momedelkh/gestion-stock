@@ -9,7 +9,7 @@ function Login() {
 
     const login = async () => {
         try {
-            const API = process.env.REACT_APP_API_URL || "https://gestion-stock-backend-xs74.onrender.com";
+            const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
             const res = await fetch(`${API}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

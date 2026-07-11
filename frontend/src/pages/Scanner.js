@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 
 function Scanner() {
-    const API = process.env.REACT_APP_API_URL || "https://gestion-stock-backend-xs74.onrender.com";
+    const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
     const [produits, setProduits] = useState([]);
     const [recherche, setRecherche] = useState("");
     const [resultat, setResultat] = useState(null);

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 function CommandesFournisseurs() {
-    const API = process.env.REACT_APP_API_URL || "https://gestion-stock-backend-xs74.onrender.com";
+    const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
     const role = localStorage.getItem("role") || "directeur";
 
     const [commandes, setCommandes] = useState([]);
