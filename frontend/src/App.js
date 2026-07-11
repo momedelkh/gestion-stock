@@ -36,7 +36,7 @@ function App() {
   const user = localStorage.getItem("user");
   const role = localStorage.getItem("role") || "directeur";
   const entreprise = localStorage.getItem("entreprise") || "L'Entreprise";
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const lang = getCurrentLang();
 
   useEffect(() => {
@@ -117,7 +117,7 @@ function App() {
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-                <span style={{ fontSize: "13px", opacity: 0.8 }}>🔒 Session sécurisée</span>
+                <span className="session-label" style={{ fontSize: "13px", opacity: 0.8 }}>🔒 Session sécurisée</span>
                 <button
                   style={btnLogout}
                   onClick={() => {

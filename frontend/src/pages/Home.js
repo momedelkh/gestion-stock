@@ -556,7 +556,7 @@ function Home() {
                 {onglet === "stock" ? (
                     <div style={panelBody}>
                         
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px", alignItems:"center" }}>
+                        <div className="table-controls" style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px", alignItems:"center" }}>
                             <div>
                                 <button style={{...btnDisplayList, backgroundColor:"#00a65a", color:"white"}} onClick={() => dummyExport('Excel')}>Excel</button>
                                 <button style={{...btnDisplayList, backgroundColor:"#3c8dbc", color:"white"}} onClick={exportCSV}>CSV</button>

@@ -34,6 +34,11 @@ code {
     box-sizing: border-box !important;
   }
 
+  /* Cache le label de session pour gagner de l'espace */
+  .session-label {
+    display: none !important;
+  }
+
   /* Menu latéral coulissant (Slide-in Drawer) */
   .sidebar-left {
     position: fixed !important;
@@ -110,6 +115,29 @@ code {
     width: 100% !important;
     min-width: 0 !important;
     flex: none !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Section filtres et boutons d'export au-dessus du tableau */
+  .table-controls {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .table-controls > div {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+
+  .table-controls button,
+  .table-controls select,
+  .table-controls input {
+    flex: 1 1 130px !important;
+    width: 100% !important;
     box-sizing: border-box !important;
   }
 
