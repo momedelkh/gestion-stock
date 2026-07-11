@@ -4,11 +4,12 @@ import { t } from "../i18n";
 function RH() {
     const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
     const role = localStorage.getItem("role") || "directeur";
+    const entreprise = localStorage.getItem("entreprise") || "L'Entreprise";
 
     const [employes, setEmployes] = useState([]);
 
     const fetchEmployes = () => {
-        fetch(`${API}/users`)
+        fetch(`${API}/users?entreprise=${encodeURIComponent(entreprise)}`)
             .then(res => res.json())
             .then(data => setEmployes(data))
             .catch(err => console.error("Erreur chargement utilisateurs:", err));
@@ -23,10 +24,10 @@ function RH() {
         if (nouveauStatut) {
             const modifSalaire = window.prompt("Modifier le Salaire (en FCFA) :", e.salaire || "0");
             const modifDroit = window.confirm(`Cet utilisateur a actuellement le droit d'édition : ${e.canEdit ? "OUI" : "NON"}.\nVoulez-vous inverser ce droit ? (OK = Inverser, Annuler = Ne rien changer)`);
-            fetch(`${API}/users/modifier/${e.id}`, {
+            fetch(`${API}/users/modifier/${e.id}?entreprise=${encodeURIComponent(entreprise)}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ statut: nouveauStatut, salaire: modifSalaire || e.salaire, canEdit: modifDroit ? !e.canEdit : e.canEdit })
+                body: JSON.stringify({ statut: nouveauStatut, salaire: modifSalaire || e.salaire, canEdit: modifDroit ? !e.canEdit : e.canEdit, entreprise })
             }).then(() => fetchEmployes());
         }
     };
@@ -62,7 +63,7 @@ function RH() {
         fetch(`${API}/users/ajouter`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password, nom, poste, role: roleStr, salaire: salaire || "0", statut: "Actif", canEdit })
+            body: JSON.stringify({ email, password, nom, poste, role: roleStr, salaire: salaire || "0", statut: "Actif", canEdit, entreprise })
         }).then(res => {
             if(res.ok) {
                 fetchEmployes();

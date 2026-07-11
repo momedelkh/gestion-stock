@@ -2,12 +2,24 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
+    const [isRegistering, setIsRegistering] = useState(false);
+    
+    // Login & Common States
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    
+    // Registration States
+    const [entreprise, setEntreprise] = useState("");
+    const [nom, setNom] = useState("");
+    
     const navigate = useNavigate();
 
     const login = async () => {
+        if (!email.trim() || !password.trim()) {
+            setError("Veuillez saisir votre email et mot de passe.");
+            return;
+        }
         try {
             const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
             const res = await fetch(`${API}/login`, {
@@ -22,10 +34,40 @@ function Login() {
                 localStorage.setItem("user", data.email);
                 localStorage.setItem("role", data.role);
                 localStorage.setItem("canEdit", data.canEdit === true ? "true" : "false");
+                localStorage.setItem("entreprise", data.entreprise || "L'Entreprise");
                 navigate("/");
                 window.location.reload();
             } else {
                 setError(data.message || "Identifiants incorrects.");
+            }
+        } catch (e) {
+            setError("Erreur de connexion au serveur.");
+        }
+    };
+
+    const register = async () => {
+        if (!entreprise.trim() || !nom.trim() || !email.trim() || !password.trim()) {
+            setError("Veuillez remplir tous les champs pour créer l'entreprise.");
+            return;
+        }
+        try {
+            const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
+            const res = await fetch(`${API}/register-company`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ entreprise, nom, email, password })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                alert("Votre entreprise a été créée avec succès ! Vous pouvez maintenant vous connecter avec cet email.");
+                setIsRegistering(false);
+                setError("");
+                setEntreprise("");
+                setNom("");
+            } else {
+                setError(data.error || "Erreur lors de la création.");
             }
         } catch (e) {
             setError("Erreur de connexion au serveur.");
@@ -38,58 +80,142 @@ function Login() {
                 
                 <div style={brandSection}>
                     <div style={icon}>🏢</div>
-                    <h1 style={titleBold}>L'Entreprise</h1>
-                    <h2 style={titleSmall}>Gestion d'entreprise</h2>
+                    <h1 style={titleBold}>{isRegistering ? "Création Espace" : "Gestion Stock"}</h1>
+                    <h2 style={titleSmall}>{isRegistering ? "Enregistrer une entreprise" : "Gestion d'entreprise"}</h2>
                 </div>
 
-                <p style={subtitle}>Veuillez vous identifier pour continuer</p>
+                <p style={subtitle}>
+                    {isRegistering 
+                        ? "Configurez l'espace ERP de votre entreprise" 
+                        : "Veuillez vous identifier pour continuer"
+                    }
+                </p>
 
                 {error && <div style={errorStyle}>{error}</div>}
 
-                <div style={inputContainer}>
-                    <label style={label}>Identifiant (Email)</label>
-                    <input
-                        style={input}
-                        placeholder="exemple@entreprise.com"
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </div>
+                {isRegistering ? (
+                    /* FORMULAIRE DE CRÉATION D'ENTREPRISE */
+                    <>
+                        <div style={inputContainer}>
+                            <label style={label}>Nom de votre Entreprise</label>
+                            <input
+                                style={input}
+                                placeholder="Ex: Boutique Alpha Sarl"
+                                value={entreprise}
+                                onChange={(e) => setEntreprise(e.target.value)}
+                            />
+                        </div>
 
-                <div style={inputContainer}>
-                    <label style={label}>Mot de passe</label>
-                    <input
-                        style={input}
-                        type="password"
-                        placeholder="••••••••"
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
+                        <div style={inputContainer}>
+                            <label style={label}>Nom complet (Directeur)</label>
+                            <input
+                                style={input}
+                                placeholder="Ex: Mohamed Al Khair"
+                                value={nom}
+                                onChange={(e) => setNom(e.target.value)}
+                            />
+                        </div>
 
-                <button 
-                  style={button} 
-                  onClick={login}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#367fa9"}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#3c8dbc"}
-                >
-                    Connexion Sécurisée
-                </button>
+                        <div style={inputContainer}>
+                            <label style={label}>Adresse Email de Connexion</label>
+                            <input
+                                style={input}
+                                type="email"
+                                placeholder="directeur@boutique.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
 
-                <div style={footerLogin}>
-                    <a 
-                        href="#" 
-                        onClick={(e) => { 
-                            e.preventDefault(); 
-                            alert("Veuillez contacter l'administrateur système (admin@entreprise.com) pour réinitialiser vos accès."); 
-                        }}
-                        style={linkStyle}
-                    >
-                        Mot de passe oublié ?
-                    </a>
+                        <div style={inputContainer}>
+                            <label style={label}>Mot de passe</label>
+                            <input
+                                style={input}
+                                type="password"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
 
-                    <span style={demoText}>
-                        Accès Démos : admin@entreprise.com (Mdp: admin)
-                    </span>
-                </div>
+                        <button 
+                          style={{...button, backgroundColor: "#28a745"}} 
+                          onClick={register}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#218838"}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#28a745"}
+                        >
+                            Créer mon Espace
+                        </button>
+
+                        <div style={{ marginTop: "15px", textAlign: "center" }}>
+                            <a 
+                                href="#" 
+                                onClick={(e) => { e.preventDefault(); setIsRegistering(false); setError(""); }}
+                                style={linkStyle}
+                            >
+                                Retour à la Connexion
+                            </a>
+                        </div>
+                    </>
+                ) : (
+                    /* FORMULAIRE DE CONNEXION */
+                    <>
+                        <div style={inputContainer}>
+                            <label style={label}>Identifiant (Email)</label>
+                            <input
+                                style={input}
+                                placeholder="exemple@entreprise.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
+
+                        <div style={inputContainer}>
+                            <label style={label}>Mot de passe</label>
+                            <input
+                                style={input}
+                                type="password"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
+
+                        <button 
+                          style={button} 
+                          onClick={login}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#367fa9"}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#3c8dbc"}
+                        >
+                            Connexion Sécurisée
+                        </button>
+
+                        <div style={footerLogin}>
+                            <a 
+                                href="#" 
+                                onClick={(e) => { 
+                                    e.preventDefault(); 
+                                    alert("Veuillez contacter l'administrateur système (admin@entreprise.com) pour réinitialiser vos accès."); 
+                                }}
+                                style={linkStyle}
+                            >
+                                Mot de passe oublié ?
+                            </a>
+
+                            <a 
+                                href="#" 
+                                onClick={(e) => { e.preventDefault(); setIsRegistering(true); setError(""); }}
+                                style={{ ...linkStyle, color: "#28a745" }}
+                            >
+                                Créer un espace ➕
+                            </a>
+                        </div>
+
+                        <span style={{...demoText, display:"block", marginTop:"15px", textAlign:"center"}}>
+                            Accès Démos : admin@entreprise.com (Mdp: admin)
+                        </span>
+                    </>
+                )}
             </div>
         </div>
     );

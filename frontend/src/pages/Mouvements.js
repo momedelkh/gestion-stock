@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 
 function Mouvements() {
     const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
+    const entreprise = localStorage.getItem("entreprise") || "L'Entreprise";
     const [logs, setLogs] = useState([]);
     const [filtre, setFiltre] = useState("tous");
     const [recherche, setRecherche] = useState("");
     const role = localStorage.getItem("role") || "directeur";
 
     const fetchLogs = () => {
-        fetch(`${API}/logs`)
+        fetch(`${API}/logs?entreprise=${encodeURIComponent(entreprise)}`)
             .then(res => res.json())
             .then(data => setLogs(data.reverse()))
             .catch(() => setLogs([]));

@@ -35,6 +35,7 @@ function SidebarLink({ to, icon, label, badge }) {
 function App() {
   const user = localStorage.getItem("user");
   const role = localStorage.getItem("role") || "directeur";
+  const entreprise = localStorage.getItem("entreprise") || "L'Entreprise";
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const lang = getCurrentLang();
 
@@ -54,8 +55,8 @@ function App() {
             <div style={{ ...sidebarHeader, flexDirection: "row", padding: "20px 10px", justifyContent: "flex-start", paddingLeft: "15px" }}>
               <span style={{ fontSize: "32px", marginRight: "12px", textShadow: "0 2px 4px rgba(0,0,0,0.3)" }}>📦</span>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: "1.2", whiteSpace: "nowrap" }}>
-                <span style={{ fontSize: "15px", fontWeight: "900", letterSpacing: "0.5px", color: "#ffffff" }}>{t("Gestion de stock")}</span>
-                <span style={{ fontSize: "10px", fontWeight: "400", color: "#9ac0da", letterSpacing: "0.5px", marginTop: "2px" }}>{t("De votre entreprise")}</span>
+                <span style={{ fontSize: "15px", fontWeight: "900", letterSpacing: "0.5px", color: "#ffffff" }}>{entreprise}</span>
+                <span style={{ fontSize: "10px", fontWeight: "400", color: "#9ac0da", letterSpacing: "0.5px", marginTop: "2px" }}>{t("Gestion de stock")}</span>
               </div>
             </div>
             <div style={sidebarUser}>

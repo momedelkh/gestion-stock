@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 
 function Scanner() {
     const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
+    const entreprise = localStorage.getItem("entreprise") || "L'Entreprise";
     const [produits, setProduits] = useState([]);
     const [recherche, setRecherche] = useState("");
     const [resultat, setResultat] = useState(null);
@@ -12,7 +13,7 @@ function Scanner() {
     const streamRef = useRef(null);
 
     useEffect(() => {
-        fetch(`${API}/produits`).then(r => r.json()).then(setProduits).catch(() => {});
+        fetch(`${API}/produits?entreprise=${encodeURIComponent(entreprise)}`).then(r => r.json()).then(setProduits).catch(() => {});
         // Vérifier si caméra disponible
         navigator.mediaDevices && navigator.mediaDevices.enumerateDevices().then(devices => {
             setCameraDispo(devices.some(d => d.kind === "videoinput"));

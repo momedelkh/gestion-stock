@@ -3,10 +3,11 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recha
 
 function Graphique() {
     const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
+    const entreprise = localStorage.getItem("entreprise") || "L'Entreprise";
     const [produits, setProduits] = useState([]);
 
     useEffect(() => {
-        fetch(`${API}/produits`)
+        fetch(`${API}/produits?entreprise=${encodeURIComponent(entreprise)}`)
             .then(res => res.json())
             .then(data => setProduits(data));
     }, []);

@@ -40,10 +40,19 @@ const Alert = mongoose.model("Alert", alertSchema, "alerts");
 const Client = mongoose.model("Client", clientSchema, "clients");
 const Commande = mongoose.model("Commande", commandeSchema, "commandes");
 
+// ======================= UTILITAIRES MULTI-ENTREPRISES =======================
+const getQueryFilter = (req) => {
+  const ent = req.query.entreprise || "L'Entreprise";
+  if (ent === "L'Entreprise") {
+    return { $or: [{ entreprise: "L'Entreprise" }, { entreprise: { $exists: false } }] };
+  }
+  return { entreprise: ent };
+};
+
 // ======================= PRODUITS =======================
 app.get("/produits", async (req, res) => {
   try {
-    const produits = await Produit.find({}, { __v: 0 }).lean();
+    const produits = await Produit.find(getQueryFilter(req), { __v: 0 }).lean();
     // Convertir _id MongoDB en id numérique pour compatibilité frontend
     const result = produits.map(p => ({ ...p, id: p.id || p._id.toString() }));
     res.json(result);
@@ -64,7 +73,7 @@ app.post("/ajouter", async (req, res) => {
 
 app.get("/supprimer/:id", async (req, res) => {
   try {
-    await Produit.deleteOne({ id: Number(req.params.id) });
+    await Produit.deleteOne({ id: Number(req.params.id), ...getQueryFilter(req) });
     res.send("Supprimé");
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -73,14 +82,54 @@ app.get("/supprimer/:id", async (req, res) => {
 
 app.post("/modifier/:id", async (req, res) => {
   try {
-    await Produit.updateOne({ id: Number(req.params.id) }, { $set: req.body });
+    await Produit.updateOne({ id: Number(req.params.id), ...getQueryFilter(req) }, { $set: req.body });
     res.send("Modifié");
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ======================= UTILISATEURS (RH) =======================
+// ======================= UTILISATEURS (RH) & COMPAGNIES =======================
+app.post("/register-company", async (req, res) => {
+  try {
+    const { entreprise, nom, email, password } = req.body;
+    if (!entreprise || !nom || !email || !password) {
+      return res.status(400).json({ error: "Tous les champs sont requis." });
+    }
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Cet email est déjà utilisé." });
+    }
+    const newUser = new User({
+      id: Date.now(),
+      nom,
+      email,
+      password,
+      role: "directeur",
+      canEdit: true,
+      entreprise,
+      statut: "Actif",
+      poste: "Directeur Général",
+      salaire: "0"
+    });
+    await newUser.save();
+    
+    const newLog = new Log({
+      id: Date.now(),
+      date: new Date().toISOString(),
+      type: "action",
+      action: `Espace créé pour l'entreprise : ${entreprise}`,
+      user: email,
+      entreprise
+    });
+    await newLog.save();
+
+    res.json({ success: true, message: "Entreprise enregistrée avec succès." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post("/login", async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email, password: req.body.password }).lean();
@@ -88,7 +137,13 @@ app.post("/login", async (req, res) => {
       if (user.role === "technicien_surface") {
         return res.status(403).json({ success: false, message: "Accès refusé. Profil non autorisé au système informatique." });
       }
-      res.json({ success: true, email: user.email, role: user.role, canEdit: user.canEdit });
+      res.json({ 
+        success: true, 
+        email: user.email, 
+        role: user.role, 
+        canEdit: user.canEdit, 
+        entreprise: user.entreprise || "L'Entreprise" 
+      });
     } else {
       res.status(401).json({ success: false, message: "Identifiants incorrects" });
     }
@@ -99,7 +154,7 @@ app.post("/login", async (req, res) => {
 
 app.get("/users", async (req, res) => {
   try {
-    const users = await User.find({}, { __v: 0 }).lean();
+    const users = await User.find(getQueryFilter(req), { __v: 0 }).lean();
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -120,7 +175,7 @@ app.post("/users/ajouter", async (req, res) => {
 
 app.post("/users/modifier/:id", async (req, res) => {
   try {
-    await User.updateOne({ id: Number(req.params.id) }, { $set: req.body });
+    await User.updateOne({ id: Number(req.params.id), ...getQueryFilter(req) }, { $set: req.body });
     res.send("Modifié");
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -130,7 +185,7 @@ app.post("/users/modifier/:id", async (req, res) => {
 // ======================= LOGS (TRAÇABILITÉ) =======================
 app.get("/logs", async (req, res) => {
   try {
-    const logs = await Log.find({}, { __v: 0 }).lean();
+    const logs = await Log.find(getQueryFilter(req), { __v: 0 }).lean();
     res.json(logs);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -157,7 +212,7 @@ app.post("/logs", async (req, res) => {
 // ======================= ALERTES (MANAGER) =======================
 app.get("/alerts", async (req, res) => {
   try {
-    const alerts = await Alert.find({}, { __v: 0 }).lean();
+    const alerts = await Alert.find(getQueryFilter(req), { __v: 0 }).lean();
     res.json(alerts);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -176,7 +231,7 @@ app.post("/alerts", async (req, res) => {
 
 app.get("/alerts/supprimer/:id", async (req, res) => {
   try {
-    await Alert.deleteOne({ id: Number(req.params.id) });
+    await Alert.deleteOne({ id: Number(req.params.id), ...getQueryFilter(req) });
     res.send("Supprimé");
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -186,7 +241,7 @@ app.get("/alerts/supprimer/:id", async (req, res) => {
 // ======================= CLIENTS (CRM) =======================
 app.get("/clients", async (req, res) => {
   try {
-    const clients = await Client.find({}, { __v: 0 }).lean();
+    const clients = await Client.find(getQueryFilter(req), { __v: 0 }).lean();
     res.json(clients);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -205,7 +260,7 @@ app.post("/clients/ajouter", async (req, res) => {
 
 app.post("/clients/modifier/:id", async (req, res) => {
   try {
-    await Client.updateOne({ id: Number(req.params.id) }, { $set: req.body });
+    await Client.updateOne({ id: Number(req.params.id), ...getQueryFilter(req) }, { $set: req.body });
     res.send("Modifié");
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -214,7 +269,7 @@ app.post("/clients/modifier/:id", async (req, res) => {
 
 app.get("/clients/supprimer/:id", async (req, res) => {
   try {
-    await Client.deleteOne({ id: Number(req.params.id) });
+    await Client.deleteOne({ id: Number(req.params.id), ...getQueryFilter(req) });
     res.send("Supprimé");
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -224,7 +279,7 @@ app.get("/clients/supprimer/:id", async (req, res) => {
 // ======================= COMMANDES FOURNISSEURS =======================
 app.get("/commandes", async (req, res) => {
   try {
-    const commandes = await Commande.find({}, { __v: 0 }).lean();
+    const commandes = await Commande.find(getQueryFilter(req), { __v: 0 }).lean();
     res.json(commandes);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -248,7 +303,7 @@ app.post("/commandes/ajouter", async (req, res) => {
 
 app.post("/commandes/modifier/:id", async (req, res) => {
   try {
-    await Commande.updateOne({ id: Number(req.params.id) }, { $set: req.body });
+    await Commande.updateOne({ id: Number(req.params.id), ...getQueryFilter(req) }, { $set: req.body });
     res.send("Modifié");
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -257,7 +312,7 @@ app.post("/commandes/modifier/:id", async (req, res) => {
 
 app.get("/commandes/supprimer/:id", async (req, res) => {
   try {
-    await Commande.deleteOne({ id: Number(req.params.id) });
+    await Commande.deleteOne({ id: Number(req.params.id), ...getQueryFilter(req) });
     res.send("Supprimé");
   } catch (err) {
     res.status(500).json({ error: err.message });

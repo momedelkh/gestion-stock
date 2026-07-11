@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 function CommandesFournisseurs() {
     const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
     const role = localStorage.getItem("role") || "directeur";
+    const entreprise = localStorage.getItem("entreprise") || "L'Entreprise";
 
     const [commandes, setCommandes] = useState([]);
     const [produits, setProduits] = useState([]);
@@ -17,14 +18,14 @@ function CommandesFournisseurs() {
     const [filtreStatut, setFiltreStatut] = useState("tous");
 
     const fetchCommandes = () => {
-        fetch(`${API}/commandes`)
+        fetch(`${API}/commandes?entreprise=${encodeURIComponent(entreprise)}`)
             .then(res => res.json())
             .then(data => setCommandes(data.reverse()))
             .catch(() => setCommandes([]));
     };
 
     const fetchProduits = () => {
-        fetch(`${API}/produits`)
+        fetch(`${API}/produits?entreprise=${encodeURIComponent(entreprise)}`)
             .then(res => res.json())
             .then(data => setProduits(data))
             .catch(() => setProduits([]));
@@ -44,22 +45,23 @@ function CommandesFournisseurs() {
             body: JSON.stringify({
                 fournisseur, produit: produitNom, quantite: Number(quantite),
                 prixUnitaire: Number(prixUnitaire || 0), montantTotal,
-                notes, creePar: localStorage.getItem("user") || "Système"
+                notes, creePar: localStorage.getItem("user") || "Système",
+                entreprise
             })
         }).then(() => { fetchCommandes(); resetForm(); });
     };
 
     const changerStatut = (cmd, nouveauStatut) => {
-        fetch(`${API}/commandes/modifier/${cmd.id}`, {
+        fetch(`${API}/commandes/modifier/${cmd.id}?entreprise=${encodeURIComponent(entreprise)}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ statut: nouveauStatut, dateMaj: new Date().toISOString() })
+            body: JSON.stringify({ statut: nouveauStatut, dateMaj: new Date().toISOString(), entreprise })
         }).then(() => fetchCommandes());
     };
 
     const supprimerCommande = (id) => {
         if (window.confirm("Supprimer cette commande fournisseur ?")) {
-            fetch(`${API}/commandes/supprimer/${id}`).then(() => fetchCommandes());
+            fetch(`${API}/commandes/supprimer/${id}?entreprise=${encodeURIComponent(entreprise)}`).then(() => fetchCommandes());
         }
     };
 

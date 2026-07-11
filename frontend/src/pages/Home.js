@@ -3,6 +3,7 @@ import { t } from "../i18n";
 
 function Home() {
     const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
+    const entreprise = localStorage.getItem("entreprise") || "L'Entreprise";
 
     const [produits, setProduits] = useState([]);
     const [logs, setLogs] = useState([]);
@@ -38,19 +39,19 @@ function Home() {
     const [onglet, setOnglet] = useState("stock");
 
     const fetchProduits = () => {
-        fetch(`${API}/produits?t=${Date.now()}`)
+        fetch(`${API}/produits?entreprise=${encodeURIComponent(entreprise)}&t=${Date.now()}`)
             .then(res => res.json())
             .then(data => setProduits(data));
     };
 
     const fetchLogs = () => {
-        fetch(`${API}/logs`)
+        fetch(`${API}/logs?entreprise=${encodeURIComponent(entreprise)}`)
             .then(res => res.json())
             .then(data => setLogs(data.reverse())); 
     };
 
     const fetchAlertesManager = () => {
-        fetch(`${API}/alerts`)
+        fetch(`${API}/alerts?entreprise=${encodeURIComponent(entreprise)}`)
             .then(res => res.json())
             .then(data => setAlertesManager(data ? data.reverse() : []))
             .catch(() => setAlertesManager([]));
@@ -67,7 +68,7 @@ function Home() {
         fetch(`${API}/logs`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: actionDesc, user: email, type, produit, quantite })
+            body: JSON.stringify({ action: actionDesc, user: email, type, produit, quantite, entreprise })
         }).then(() => fetchLogs());
     };
 
@@ -114,7 +115,7 @@ function Home() {
                     fetch(`${API}/alerts`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ message: `Vendeur "${email}" a baissé le prix de "${p.nom}" à ${finalPrix} FCFA (au lieu de ${prixUnitaireNumerique} FCFA).` })
+                        body: JSON.stringify({ message: `Vendeur "${email}" a baissé le prix de "${p.nom}" à ${finalPrix} FCFA (au lieu de ${prixUnitaireNumerique} FCFA).`, entreprise })
                     }).then(() => fetchAlertesManager());
                 }
             }
@@ -272,7 +273,7 @@ function Home() {
         fetch(`${API}/ajouter`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nom, prix, prixAchat, quantite, emplacement, categorie, fournisseur, image: img }),
+            body: JSON.stringify({ nom, prix, prixAchat, quantite, emplacement, categorie, fournisseur, image: img, entreprise }),
         }).then(() => { 
             fetchProduits(); 
             logAction(`A référencé un nouveau produit : ${nom}`, "entree", nom, quantite);
@@ -282,7 +283,7 @@ function Home() {
 
     const supprimer = (p) => {
         if(window.confirm("Voulez-vous vraiment supprimer ce produit ?")) {
-            fetch(`${API}/supprimer/${p.id}`).then(() => {
+            fetch(`${API}/supprimer/${p.id}?entreprise=${encodeURIComponent(entreprise)}`).then(() => {
                 fetchProduits();
                 logAction(`A supprimé le produit : ${p.nom}`, "suppression", p.nom, p.quantite);
             });
@@ -305,7 +306,7 @@ function Home() {
         fetch(`${API}/modifier/${editId}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nom, prix, prixAchat, quantite, emplacement, categorie, fournisseur }),
+            body: JSON.stringify({ nom, prix, prixAchat, quantite, emplacement, categorie, fournisseur, entreprise }),
         }).then(() => { 
             fetchProduits(); 
             logAction(`A modifié la fiche du produit : ${nom}`, "modification", nom);
@@ -440,7 +441,7 @@ function Home() {
                             <li key={a.id} style={{marginBottom: "5px"}}>
                                 [{new Date(a.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}] {a.message}
                                 <button style={{marginLeft: "10px", padding: "2px 5px", fontSize: "11px", cursor: "pointer", backgroundColor:"#8a6d3b", color:"white", border:"none", borderRadius:"3px"}} onClick={() => {
-                                    fetch(`${API}/alerts/supprimer/${a.id}`).then(() => fetchAlertesManager());
+                                    fetch(`${API}/alerts/supprimer/${a.id}?entreprise=${encodeURIComponent(entreprise)}`).then(() => fetchAlertesManager());
                                 }}>✅ Marquer comme Lu</button>
                             </li>
                         ))}

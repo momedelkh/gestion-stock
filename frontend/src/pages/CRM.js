@@ -3,6 +3,7 @@ import { t } from "../i18n";
 
 function CRM() {
     const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
+    const entreprise = localStorage.getItem("entreprise") || "L'Entreprise";
 
     const [clients, setClients] = useState([]);
     const [nom, setNom] = useState("");
@@ -15,7 +16,7 @@ function CRM() {
     const canEdit = localStorage.getItem("canEdit") === "true";
 
     const fetchClients = () => {
-        fetch(`${API}/clients`)
+        fetch(`${API}/clients?entreprise=${encodeURIComponent(entreprise)}`)
             .then(res => res.json())
             .then(data => setClients(data));
     };
@@ -25,7 +26,7 @@ function CRM() {
         fetch(`${API}/logs`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: actionDesc, user: email })
+            body: JSON.stringify({ action: actionDesc, user: email, entreprise })
         });
     };
 
@@ -42,7 +43,7 @@ function CRM() {
         fetch(endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nom, contact, volume_achats: volumeAchats, niveau })
+            body: JSON.stringify({ nom, contact, volume_achats: volumeAchats, niveau, entreprise })
         }).then(() => {
             fetchClients();
             logAction(actionDesc);
@@ -52,7 +53,7 @@ function CRM() {
 
     const supprimerClient = (c) => {
         if(window.confirm(`Êtes-vous sûr de vouloir supprimer définitivement le client : ${c.nom} ?`)) {
-            fetch(`${API}/clients/supprimer/${c.id}`).then(() => {
+            fetch(`${API}/clients/supprimer/${c.id}?entreprise=${encodeURIComponent(entreprise)}`).then(() => {
                 fetchClients();
                 logAction(`A supprimé le client : ${c.nom}`);
             });
