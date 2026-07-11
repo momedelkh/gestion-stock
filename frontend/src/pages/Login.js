@@ -76,7 +76,7 @@ function Login() {
 
     return (
         <div style={container}>
-            <div style={box}>
+            <div className="login-box" style={box}>
                 
                 <div style={brandSection}>
                     <div style={icon}>🏢</div>

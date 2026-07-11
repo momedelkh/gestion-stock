@@ -83,7 +83,7 @@ function CRM() {
             {(role === "directeur" || canEdit) && (
                 <div style={{...panel, borderTopColor: "#f39c12"}}>
                     <div style={panelHeader}>✨ {editId ? t("Modifier la Fiche Client") : t("Ajouter un Nouveau Partenaire")}</div>
-                    <div style={{ ...panelBody, display: "flex", gap: "15px", flexWrap: "wrap", alignItems: "flex-end" }}>
+                    <div className="form-row" style={{ ...panelBody, display: "flex", gap: "15px", flexWrap: "wrap", alignItems: "flex-end" }}>
                         <div style={inputGroup}>
                             <label style={label}>{t("Raison Sociale *")}</label>
                             <input style={input} placeholder="Ex: Tech Solutions S.A." value={nom} onChange={(e) => setNom(e.target.value)} />
