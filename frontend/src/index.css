@@ -180,3 +180,23 @@ code {
     box-sizing: border-box !important;
   }
 }
+
+/* ==========================================================================
+   ARRIÈRE-PLAN PAGE D'AUTHENTIFICATION (LOGIN)
+   ========================================================================== */
+.login-auth-bg {
+  min-height: 100vh !important;
+  width: 100vw !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  background-image: linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.55)), url('./background-login.jpg') !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  font-family: Arial, sans-serif !important;
+  box-sizing: border-box !important;
+  padding: 20px !important;
+}
+

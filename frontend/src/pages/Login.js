@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import bgImage from "../background-login.jpg";
 
 function Login() {
     const [isRegistering, setIsRegistering] = useState(false);
@@ -75,7 +76,7 @@ function Login() {
     };
 
     return (
-        <div style={container}>
+        <div className="login-auth-bg" style={container}>
             <div className="login-box" style={box}>
                 
                 <div style={brandSection}>
@@ -245,22 +246,32 @@ const demoText = {
 };
 
 const container = {
-    height: "100vh",
+    minHeight: "100vh",
+    width: "100%",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#d2d6de", // Classic clear admin background
-    fontFamily: "Arial, sans-serif"
+    backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.55)), url(${bgImage})`,
+    backgroundPosition: "center",
+    backgroundSize: "cover",
+    backgroundRepeat: "no-repeat",
+    backgroundAttachment: "fixed",
+    fontFamily: "Arial, sans-serif",
+    boxSizing: "border-box",
+    padding: "20px"
 };
 
 const box = {
-    background: "#fff",
-    padding: "40px",
-    borderRadius: "4px",
+    background: "rgba(255, 255, 255, 0.96)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
+    padding: "40px 35px",
+    borderRadius: "12px",
     textAlign: "center",
-    width: "360px",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-    borderTop: "4px solid #3c8dbc"
+    width: "380px",
+    maxWidth: "90%",
+    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.35), 0 5px 15px rgba(0, 0, 0, 0.2)",
+    borderTop: "5px solid #3c8dbc"
 };
 
 const brandSection = {
