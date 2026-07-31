@@ -321,11 +321,16 @@ function Home() {
     };
 
     const supprimer = (p) => {
-        if(window.confirm("Voulez-vous vraiment supprimer ce produit ?")) {
-            fetch(`${API}/supprimer/${p.id}?entreprise=${encodeURIComponent(entreprise)}`).then(() => {
-                fetchProduits();
-                logAction(`A supprimé le produit : ${p.nom}`, "suppression", p.nom, p.quantite);
-            });
+        const targetId = p.id || p._id;
+        if (window.confirm(`Voulez-vous vraiment supprimer le produit "${p.nom}" ?`)) {
+            fetch(`${API}/supprimer/${targetId}?entreprise=${encodeURIComponent(entreprise)}`)
+                .then(() => {
+                    fetchProduits();
+                    logAction(`A supprimé le produit : ${p.nom}`, "suppression", p.nom, p.quantite);
+                })
+                .catch(() => {
+                    fetchProduits();
+                });
         }
     };
 

@@ -50,11 +50,23 @@ const getQueryFilter = (req) => {
   return { entreprise: ent };
 };
 
+const getFlexibleIdFilter = (rawId, req) => {
+  const numId = Number(rawId);
+  const idMatches = [{ id: rawId }];
+  if (!isNaN(numId)) {
+    idMatches.push({ id: numId });
+  }
+  if (mongoose.Types.ObjectId.isValid(rawId)) {
+    idMatches.push({ _id: new mongoose.Types.ObjectId(rawId) });
+  }
+  return { $or: idMatches, ...getQueryFilter(req) };
+};
+
 // ======================= PRODUITS =======================
 app.get("/produits", async (req, res) => {
   try {
     const produits = await Produit.find(getQueryFilter(req), { __v: 0 }).lean();
-    // Convertir _id MongoDB en id numérique pour compatibilité frontend
+    // Convertir _id MongoDB en id numérique/string pour compatibilité frontend
     const result = produits.map(p => ({ ...p, id: p.id || p._id.toString() }));
     res.json(result);
   } catch (err) {
@@ -72,29 +84,23 @@ app.post("/ajouter", async (req, res) => {
   }
 });
 
-app.get("/supprimer/:id", async (req, res) => {
+const deleteProductHandler = async (req, res) => {
   try {
-    await Produit.deleteOne({ id: Number(req.params.id), ...getQueryFilter(req) });
-    res.send("Supprimé");
+    const filter = getFlexibleIdFilter(req.params.id, req);
+    const result = await Produit.deleteOne(filter);
+    res.json({ message: "Supprimé", deletedCount: result.deletedCount });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+};
+
+app.get("/supprimer/:id", deleteProductHandler);
+app.delete("/supprimer/:id", deleteProductHandler);
+app.delete("/produits/:id", deleteProductHandler);
 
 app.post("/modifier/:id", async (req, res) => {
   try {
-    const rawId = req.params.id;
-    const numId = Number(rawId);
-    const idMatches = [{ id: rawId }];
-    if (!isNaN(numId)) {
-      idMatches.push({ id: numId });
-    }
-    if (mongoose.Types.ObjectId.isValid(rawId)) {
-      idMatches.push({ _id: new mongoose.Types.ObjectId(rawId) });
-    }
-
-    const filter = { $or: idMatches, ...getQueryFilter(req) };
-
+    const filter = getFlexibleIdFilter(req.params.id, req);
     const updateData = { ...req.body };
     if (updateData.quantite !== undefined) {
       updateData.quantite = Number(updateData.quantite);
