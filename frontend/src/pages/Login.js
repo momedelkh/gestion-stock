@@ -4,6 +4,7 @@ import bgImage from "../background-login.jpg";
 
 function Login() {
     const [isRegistering, setIsRegistering] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     
     // Login & Common States
     const [email, setEmail] = useState("");
@@ -132,13 +133,23 @@ function Login() {
 
                         <div style={inputContainer}>
                             <label style={label}>Mot de passe</label>
-                            <input
-                                style={input}
-                                type="password"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
+                            <div style={{ position: "relative" }}>
+                                <input
+                                    style={{ ...input, paddingRight: "42px" }}
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={eyeButtonStyle}
+                                    title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                                >
+                                    {showPassword ? "🙈" : "👁️"}
+                                </button>
+                            </div>
                         </div>
 
                         <button 
@@ -175,13 +186,23 @@ function Login() {
 
                         <div style={inputContainer}>
                             <label style={label}>Mot de passe</label>
-                            <input
-                                style={input}
-                                type="password"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
+                            <div style={{ position: "relative" }}>
+                                <input
+                                    style={{ ...input, paddingRight: "42px" }}
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={eyeButtonStyle}
+                                    title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                                >
+                                    {showPassword ? "🙈" : "👁️"}
+                                </button>
+                            </div>
                         </div>
 
                         <button 
@@ -388,6 +409,24 @@ const errorStyle = {
     marginBottom: "20px",
     fontSize: "13px",
     fontWeight: "500"
+};
+
+const eyeButtonStyle = {
+    position: "absolute",
+    right: "12px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "18px",
+    padding: "0",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#64748b",
+    outline: "none",
+    userSelect: "none"
 };
 
 export default Login;
