@@ -80,9 +80,11 @@ function Login() {
             <div className="login-box" style={box}>
                 
                 <div style={brandSection}>
-                    <div style={icon}>📦</div>
+                    <div style={iconBadge}>
+                        <span style={{ fontSize: "32px" }}>📦</span>
+                    </div>
                     <h1 style={titleBold}>{isRegistering ? "Création Espace" : "TIJARA PRO"}</h1>
-                    <h2 style={titleSmall}>{isRegistering ? "Enregistrer une entreprise" : "Gestion ERP & Stock"}</h2>
+                    <h2 style={titleSmall}>{isRegistering ? "Enregistrer une entreprise" : "GESTION ERP & STOCK"}</h2>
                 </div>
 
                 <p style={subtitle}>
@@ -140,21 +142,21 @@ function Login() {
                         </div>
 
                         <button 
-                          style={{...button, backgroundColor: "#28a745"}} 
+                          style={successButton} 
                           onClick={register}
-                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#218838"}
-                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#28a745"}
+                          onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-1px)"}
+                          onMouseOut={(e) => e.currentTarget.style.transform = "none"}
                         >
-                            Créer mon Espace
+                            Créer mon Espace 🚀
                         </button>
 
-                        <div style={{ marginTop: "15px", textAlign: "center" }}>
+                        <div style={{ marginTop: "18px", textAlign: "center" }}>
                             <a 
                                 href="#" 
                                 onClick={(e) => { e.preventDefault(); setIsRegistering(false); setError(""); }}
                                 style={linkStyle}
                             >
-                                Retour à la Connexion
+                                ← Retour à la Connexion
                             </a>
                         </div>
                     </>
@@ -185,10 +187,10 @@ function Login() {
                         <button 
                           style={button} 
                           onClick={login}
-                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#367fa9"}
-                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#3c8dbc"}
+                          onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-1px)"}
+                          onMouseOut={(e) => e.currentTarget.style.transform = "none"}
                         >
-                            Connexion Sécurisée
+                            Connexion Sécurisée 🔐
                         </button>
 
                         <div style={footerLogin}>
@@ -206,15 +208,15 @@ function Login() {
                             <a 
                                 href="#" 
                                 onClick={(e) => { e.preventDefault(); setIsRegistering(true); setError(""); }}
-                                style={{ ...linkStyle, color: "#28a745" }}
+                                style={{ ...linkStyle, color: "#059669", fontWeight: "700" }}
                             >
                                 Créer un espace ➕
                             </a>
                         </div>
 
-                        <span style={{...demoText, display:"block", marginTop:"15px", textAlign:"center"}}>
-                            Accès Démos : admin@entreprise.com (Mdp: admin)
-                        </span>
+                        <div style={demoBox}>
+                            Accès Démos : <strong style={{ color: "#0f172a" }}>admin@entreprise.com</strong> (Mdp: admin)
+                        </div>
                     </>
                 )}
             </div>
@@ -222,10 +224,10 @@ function Login() {
     );
 }
 
-/* 🎨 STYLES : DESIGN CORPORATE / ADMIN LTE */
+/* 🎨 STYLES : PREMIUM MODERN GLASSMORPHISM & TIJARA PRO THEME */
 
 const footerLogin = {
-    marginTop: "15px",
+    marginTop: "20px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center"
@@ -233,16 +235,21 @@ const footerLogin = {
 
 const linkStyle = {
     fontSize: "13px",
-    color: "#3c8dbc",
+    color: "#0284c7",
     textDecoration: "none",
-    fontWeight: "bold",
-    transition: "color 0.2s",
+    fontWeight: "600",
+    transition: "all 0.2s ease"
 };
 
-const demoText = {
-    fontSize: "11px",
-    color: "#aaa",
-    fontStyle: "italic"
+const demoBox = {
+    fontSize: "12px",
+    color: "#64748b",
+    background: "rgba(241, 245, 249, 0.85)",
+    border: "1px solid #e2e8f0",
+    borderRadius: "8px",
+    padding: "10px 12px",
+    marginTop: "20px",
+    textAlign: "center"
 };
 
 const container = {
@@ -251,106 +258,136 @@ const container = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.55)), url(${bgImage})`,
+    backgroundImage: `linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.65)), url(${bgImage})`,
     backgroundPosition: "center",
     backgroundSize: "cover",
     backgroundRepeat: "no-repeat",
     backgroundAttachment: "fixed",
-    fontFamily: "Arial, sans-serif",
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
     boxSizing: "border-box",
     padding: "20px"
 };
 
 const box = {
-    background: "rgba(255, 255, 255, 0.96)",
-    backdropFilter: "blur(12px)",
-    WebkitBackdropFilter: "blur(12px)",
-    padding: "40px 35px",
-    borderRadius: "12px",
+    background: "linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 246, 255, 0.92))",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    padding: "42px 36px",
+    borderRadius: "18px",
     textAlign: "center",
-    width: "380px",
-    maxWidth: "90%",
-    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.35), 0 5px 15px rgba(0, 0, 0, 0.2)",
-    borderTop: "5px solid #3c8dbc"
+    width: "390px",
+    maxWidth: "92%",
+    boxShadow: "0 25px 50px -12px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.6)",
+    borderTop: "6px solid #0284c7",
+    boxSizing: "border-box"
 };
 
 const brandSection = {
-    marginBottom: "25px"
+    marginBottom: "20px"
 };
 
-const icon = {
-    fontSize: "45px",
-    textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-    marginBottom: "5px"
+const iconBadge = {
+    width: "60px",
+    height: "60px",
+    margin: "0 auto 12px auto",
+    borderRadius: "16px",
+    background: "linear-gradient(135deg, #0284c7 0%, #2563eb 100%)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    boxShadow: "0 10px 25px -5px rgba(2, 132, 199, 0.45)"
 };
 
 const titleBold = {
-    color: "#333",
-    fontSize: "24px",
+    color: "#0f172a",
+    fontSize: "28px",
     margin: "0",
     fontWeight: "900",
     letterSpacing: "0.5px"
 };
 
 const titleSmall = {
-    color: "#777",
+    color: "#0284c7",
     fontSize: "11px",
-    margin: "5px 0 0 0",
-    letterSpacing: "1px"
+    margin: "6px 0 0 0",
+    fontWeight: "700",
+    letterSpacing: "1.5px"
 };
 
 const subtitle = {
-    color: "#666",
+    color: "#64748b",
     fontSize: "14px",
-    marginBottom: "25px",
-    fontWeight: "normal"
+    marginBottom: "24px",
+    fontWeight: "500"
 };
 
 const inputContainer = {
-    marginBottom: "15px",
+    marginBottom: "16px",
     textAlign: "left"
 };
 
 const label = {
     display: "block",
-    marginBottom: "5px",
-    fontSize: "13px",
-    color: "#555",
-    fontWeight: "bold"
+    marginBottom: "6px",
+    fontSize: "12px",
+    color: "#334155",
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px"
 };
 
 const input = {
     width: "100%",
-    padding: "12px 10px",
-    boxSizing: "border-box", // Very necessary
-    borderRadius: "2px",
-    border: "1px solid #ccc",
+    padding: "13px 14px",
+    boxSizing: "border-box",
+    borderRadius: "8px",
+    border: "1.5px solid #cbd5e1",
     outline: "none",
     fontSize: "14px",
+    background: "#f8fafc",
+    color: "#0f172a",
+    transition: "all 0.2s ease"
 };
 
 const button = {
     width: "100%",
-    padding: "12px",
-    background: "#3c8dbc",
-    color: "#fff",
+    padding: "14px",
+    background: "linear-gradient(135deg, #0284c7 0%, #2563eb 100%)",
+    color: "#ffffff",
     border: "none",
-    borderRadius: "2px",
+    borderRadius: "8px",
     cursor: "pointer",
     fontSize: "15px",
-    fontWeight: "bold",
-    marginTop: "10px",
-    transition: "background 0.2s"
+    fontWeight: "700",
+    marginTop: "12px",
+    boxShadow: "0 8px 20px -4px rgba(2, 132, 199, 0.5)",
+    transition: "all 0.2s ease"
+};
+
+const successButton = {
+    width: "100%",
+    padding: "14px",
+    background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "15px",
+    fontWeight: "700",
+    marginTop: "12px",
+    boxShadow: "0 8px 20px -4px rgba(16, 185, 129, 0.45)",
+    transition: "all 0.2s ease"
 };
 
 const errorStyle = {
-    color: "#dd4b39",
-    background: "#f2dede",
-    border: "1px solid #ebccd1",
-    padding: "10px",
-    borderRadius: "2px",
+    color: "#ef4444",
+    background: "#fef2f2",
+    border: "1px solid #fecaca",
+    padding: "11px 14px",
+    borderRadius: "8px",
     marginBottom: "20px",
-    fontSize: "13px"
+    fontSize: "13px",
+    fontWeight: "500"
 };
 
 export default Login;
