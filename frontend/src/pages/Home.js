@@ -10,8 +10,10 @@ function Home() {
     
     const [alertesManager, setAlertesManager] = useState([]);
     
-    // Panier de caisse
+    // Panier de caisse & Facturation
     const [panier, setPanier] = useState([]);
+    const [showFactureModal, setShowFactureModal] = useState(false);
+    const [derniereFacture, setDerniereFacture] = useState(null);
 
     const [nom, setNom] = useState("");
     const [prix, setPrix] = useState("");
@@ -149,51 +151,47 @@ function Home() {
         if(window.confirm("Annuler et vider le panier en cours ?")) setPanier([]);
     };
 
-    const genererFactureGlobale = (panierFinal, totalPanier) => {
-        const emailVendeur = localStorage.getItem("user") || "Inconnu";
-        const dateVente = new Date().toLocaleString();
+    const imprimerFactureModal = (factureObj) => {
+        const fact = factureObj || derniereFacture;
+        if (!fact) return;
         
-        const myWindow = window.open("", "_blank");
-        if (!myWindow) { alert("Pop-up bloqué ! Le reçu n'a pas pu s'ouvrir."); return; }
-        
-        // Liste dynamique des articles HTML
         let articlesHTML = "";
-        panierFinal.forEach(item => {
+        fact.items.forEach(item => {
             articlesHTML += `
                 <tr>
-                    <td style="text-align:left; border-bottom:1px dashed #ccc; padding:4px 0;">${item.quantite}x ${item.nom}</td>
-                    <td style="text-align:right; border-bottom:1px dashed #ccc; padding:4px 0;">${item.sousTotal} FCFA</td>
+                    <td style="text-align:left; border-bottom:1px dashed #ccc; padding:6px 0;">${item.quantite}x ${item.nom}</td>
+                    <td style="text-align:right; border-bottom:1px dashed #ccc; padding:6px 0;">${item.sousTotal.toLocaleString()} FCFA</td>
                 </tr>
             `;
         });
 
-        // Facture Universelle et N&B pour imprimantes thermiques
-        myWindow.document.write(`
+        const printHTML = `
+            <!DOCTYPE html>
             <html>
                 <head>
-                    <title>Reçu de Caisse - Vente Multiples</title>
+                    <title>Reçu de Caisse — ${fact.entreprise}</title>
                     <style>
-                        body { font-family: 'Courier New', Courier, monospace; margin: 20px; color: #000; background: #fff;}
-                        .ticket { width: 300px; margin: 0 auto; padding: 10px; border: 1px dotted #ccc;}
+                        body { font-family: 'Courier New', Courier, monospace; margin: 15px; color: #000; background: #fff;}
+                        .ticket { width: 300px; margin: 0 auto; padding: 10px; border: 1px dotted #888;}
                         .center { text-align: center; }
-                        h2 { margin: 0; font-size: 20px; font-weight: bold; }
-                        p { margin: 5px 0; font-size: 14px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+                        h2 { margin: 0 0 5px 0; font-size: 20px; font-weight: bold; }
+                        p { margin: 3px 0; font-size: 13px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
                         .total-row { font-size: 16px; font-weight: bold; border-top: 2px solid #000; padding-top: 10px; margin-top:10px; display:flex; justify-content:space-between; }
-                        .footer { margin-top: 20px; font-size: 12px; text-align:center; border-top: 1px dashed #333; padding-top: 10px; }
+                        .footer { margin-top: 20px; font-size: 11px; text-align:center; border-top: 1px dashed #333; padding-top: 10px; }
                         @media print { .ticket { width: 100%; border:none; margin:0; padding:0; } body { margin: 0; } }
                     </style>
                 </head>
                 <body>
                     <div class="ticket">
                         <div class="center">
-                            <h2>TICKET DE CAISSE</h2>
-                            <p>Application de Gestion ERP</p>
+                            <h2>${fact.entreprise}</h2>
+                            <p>TICKET DE CAISSE</p>
                         </div>
-                        <div style="border-bottom: 2px dashed #000; margin: 10px 0;"></div>
-                        <p>Date : ${dateVente}</p>
-                        <p>Caissier : ${emailVendeur.split('@')[0]}</p>
-                        <div style="border-bottom: 2px dashed #000; margin: 10px 0;"></div>
+                        <div style="border-bottom: 2px dashed #000; margin: 8px 0;"></div>
+                        <p>Date : ${fact.date}</p>
+                        <p>Vendeur : ${fact.caissier}</p>
+                        <div style="border-bottom: 2px dashed #000; margin: 8px 0;"></div>
                         
                         <table>
                             ${articlesHTML}
@@ -201,11 +199,11 @@ function Home() {
                         
                         <div class="total-row">
                             <span>TOTAL NET :</span>
-                            <span>${totalPanier} FCFA</span>
+                            <span>${fact.total.toLocaleString()} FCFA</span>
                         </div>
                         
                         <div class="footer">
-                            MERCI DE VOTRE ACHAT<br/>Document imprimé sur POS
+                            MERCI DE VOTRE ACHAT<br/>Document imprimé sur TIJARA PRO
                         </div>
                     </div>
                     <script>
@@ -213,32 +211,59 @@ function Home() {
                     </script>
                 </body>
             </html>
-        `);
-        myWindow.document.close();
+        `;
+
+        const myWindow = window.open("", "_blank");
+        if (myWindow) {
+            myWindow.document.write(printHTML);
+            myWindow.document.close();
+        } else {
+            // Impression directe via iframe masqué si les fenêtres surgissantes sont bloquées par le navigateur !
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            document.body.appendChild(iframe);
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(printHTML);
+            doc.close();
+            setTimeout(() => {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+                setTimeout(() => {
+                    try { document.body.removeChild(iframe); } catch(e){}
+                }, 1000);
+            }, 500);
+        }
     };
 
     const encaisserPanier = () => {
         if (panier.length === 0) return;
-        const veutImprimer = window.confirm("La vente a été calculée.\n\nVoulez-vous IMPRIMER le ticket de caisse ?");
+        
         const totalFacture = panier.reduce((sum, item) => sum + item.sousTotal, 0);
         const totalMarge = panier.reduce((sum, item) => {
             const cleanAch = Number(String(item.pOrigine.prixAchat || 0).replace(/[^0-9.-]+/g, "")) || 0;
             return sum + ((item.prixUnitaire - cleanAch) * item.quantite);
         }, 0);
 
-        // Envoyer requêtes API multiples et attendre la fin
+        // Envoyer les requêtes API pour déduire le stock réel de chaque produit en base de données
         const requetes = panier.map(item => {
             const pOrigine = item.pOrigine;
-            return fetch(`${API}/modifier/${item.id}`, {
+            const nouvelleQuantite = Math.max(0, Number(pOrigine.quantite) - Number(item.quantite));
+            return fetch(`${API}/modifier/${item.id}?entreprise=${encodeURIComponent(entreprise)}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...pOrigine, quantite: Number(pOrigine.quantite) - item.quantite })
+                body: JSON.stringify({ ...pOrigine, quantite: nouvelleQuantite, entreprise })
             });
         });
 
         Promise.all(requetes).then(() => {
             fetchProduits();
-            logAction(`A validé un panier d'achat : ${panier.length} ligne(s) pour ${totalFacture} FCFA`, "vente", null, null);
+            logAction(`A validé une vente de panier : ${panier.length} article(s) pour ${totalFacture} FCFA`, "vente", null, null);
             setRevenu(prev => {
                 const nouveauRevenu = prev + totalFacture;
                 localStorage.setItem("revenu_stat", nouveauRevenu);
@@ -250,11 +275,22 @@ function Home() {
                 return nouveauB;
             });
 
-            if (veutImprimer) {
-                genererFactureGlobale(panier, totalFacture);
-            }
-            setPanier([]); // Vider le panier après encaissement
-            alert("Vente validée et stock déduit avec succès !");
+            // Sauvegarder la facture pour affichage dans la modale et impression
+            const factureObj = {
+                items: [...panier],
+                total: totalFacture,
+                date: new Date().toLocaleString("fr-FR"),
+                caissier: (localStorage.getItem("user") || "Vendeur").split('@')[0],
+                entreprise: entreprise
+            };
+            setDerniereFacture(factureObj);
+            setShowFactureModal(true);
+            setPanier([]); // Vider le panier de caisse
+
+            // Déclencher aussi l'impression automatiquement
+            imprimerFactureModal(factureObj);
+        }).catch(err => {
+            alert("Erreur de connexion au serveur lors de la mise à jour des stocks.");
         });
     };
 
@@ -655,9 +691,93 @@ function Home() {
                 )}
             </div>
 
+            {/* MODALE REÇU / TICKET DE CAISSE INTERACTIF ET IMPRIMABLE */}
+            {showFactureModal && derniereFacture && (
+                <div style={modalOverlayStyle}>
+                    <div style={modalCardStyle}>
+                        <div style={{ textAlign: "center", marginBottom: "15px" }}>
+                            <h2 style={{ margin: 0, color: "#0f172a", fontSize: "20px" }}>📜 {derniereFacture.entreprise}</h2>
+                            <p style={{ margin: "4px 0", color: "#64748b", fontSize: "13px" }}>Ticket de Caisse — Vente Validée</p>
+                            <span style={{ fontSize: "12px", color: "#00a65a", fontWeight: "bold" }}>✅ Stock déduit en base de données</span>
+                        </div>
+
+                        <div style={{ background: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px dashed #cbd5e1", marginBottom: "15px", fontSize: "13px", color: "#334155" }}>
+                            <div><b>Date & Heure :</b> {derniereFacture.date}</div>
+                            <div><b>Vendeur :</b> {derniereFacture.caissier}</div>
+                        </div>
+
+                        <div style={{ maxHeight: "200px", overflowY: "auto", marginBottom: "15px" }}>
+                            <table style={{ width: "100%", fontSize: "13px", borderCollapse: "collapse" }}>
+                                <thead>
+                                    <tr style={{ borderBottom: "2px solid #cbd5e1", textAlign: "left", color: "#475569" }}>
+                                        <th style={{ padding: "6px 0" }}>Article</th>
+                                        <th style={{ padding: "6px 0", textAlign: "center" }}>Qté</th>
+                                        <th style={{ padding: "6px 0", textAlign: "right" }}>Prix Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {derniereFacture.items.map((item, idx) => (
+                                        <tr key={idx} style={{ borderBottom: "1px dashed #e2e8f0" }}>
+                                            <td style={{ padding: "6px 0" }}>{item.nom}</td>
+                                            <td style={{ padding: "6px 0", textAlign: "center" }}>{item.quantite}</td>
+                                            <td style={{ padding: "6px 0", textAlign: "right", fontWeight: "bold" }}>{item.sousTotal.toLocaleString()} FCFA</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px", fontWeight: "bold", borderTop: "2px solid #0f172a", paddingTop: "10px", marginBottom: "20px", color: "#0f172a" }}>
+                            <span>TOTAL NET :</span>
+                            <span style={{ color: "#0284c7" }}>{derniereFacture.total.toLocaleString()} FCFA</span>
+                        </div>
+
+                        <div style={{ display: "flex", gap: "10px" }}>
+                            <button
+                                style={{ flex: 1, padding: "12px", background: "linear-gradient(135deg, #0284c7, #2563eb)", color: "white", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", fontSize: "14px" }}
+                                onClick={() => imprimerFactureModal(derniereFacture)}
+                            >
+                                🖨️ Imprimer le Reçu
+                            </button>
+                            <button
+                                style={{ padding: "12px 18px", background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", fontSize: "14px" }}
+                                onClick={() => setShowFactureModal(false)}
+                            >
+                                ✖️ Fermer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }
+
+const modalOverlayStyle = {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100vw",
+    height: "100vh",
+    backgroundColor: "rgba(15, 23, 42, 0.65)",
+    backdropFilter: "blur(6px)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9999,
+    padding: "20px"
+};
+
+const modalCardStyle = {
+    background: "#ffffff",
+    padding: "25px",
+    borderRadius: "16px",
+    width: "420px",
+    maxWidth: "95%",
+    boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+    boxSizing: "border-box"
+};
 
 // 🎨 STYLES
 const alertBanner = { backgroundColor: "#f2dede", color: "#a94442", padding: "15px", borderRadius: "4px", border: "1px solid #ebccd1", fontSize: "14px" };

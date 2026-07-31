@@ -42,7 +42,8 @@ const Commande = mongoose.model("Commande", commandeSchema, "commandes");
 
 // ======================= UTILITAIRES MULTI-ENTREPRISES =======================
 const getQueryFilter = (req) => {
-  const ent = req.query.entreprise || "L'Entreprise";
+  const ent = req.query.entreprise || (req.body && req.body.entreprise) || "L'Entreprise";
+  if (ent === "ALL") return {};
   if (ent === "L'Entreprise") {
     return { $or: [{ entreprise: "L'Entreprise" }, { entreprise: { $exists: false } }] };
   }
@@ -82,7 +83,24 @@ app.get("/supprimer/:id", async (req, res) => {
 
 app.post("/modifier/:id", async (req, res) => {
   try {
-    await Produit.updateOne({ id: Number(req.params.id), ...getQueryFilter(req) }, { $set: req.body });
+    const rawId = req.params.id;
+    const numId = Number(rawId);
+    const idMatches = [{ id: rawId }];
+    if (!isNaN(numId)) {
+      idMatches.push({ id: numId });
+    }
+    if (mongoose.Types.ObjectId.isValid(rawId)) {
+      idMatches.push({ _id: new mongoose.Types.ObjectId(rawId) });
+    }
+
+    const filter = { $or: idMatches, ...getQueryFilter(req) };
+
+    const updateData = { ...req.body };
+    if (updateData.quantite !== undefined) {
+      updateData.quantite = Number(updateData.quantite);
+    }
+
+    const result = await Produit.updateOne(filter, { $set: updateData });
     res.send("Modifié");
   } catch (err) {
     res.status(500).json({ error: err.message });
