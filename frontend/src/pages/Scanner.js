@@ -30,27 +30,18 @@ function Scanner() {
         return () => stopCamera();
     }, []);
 
-    const startCamera = async () => {
-        try {
-            stopCamera();
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
-            });
-            streamRef.current = stream;
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                videoRef.current.play();
-            }
-            setScanActif(true);
-            setScanMessage("📡 Caméra active — Pointez vers le code-barres ou QR code");
+    useEffect(() => {
+        if (scanActif && streamRef.current && videoRef.current) {
+            videoRef.current.srcObject = streamRef.current;
+            videoRef.current.setAttribute("playsinline", "true");
+            videoRef.current.play().catch(e => console.log("Play error:", e));
 
-            // Détection automatique en boucle si BarcodeDetector est supporté
             if ("BarcodeDetector" in window) {
                 const detector = new window.BarcodeDetector({
                     formats: ["qr_code", "ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "itf", "data_matrix"]
                 });
                 scanLoopRef.current = setInterval(async () => {
-                    if (videoRef.current && videoRef.current.readyState === 4) {
+                    if (videoRef.current && videoRef.current.readyState >= 2) {
                         try {
                             const barcodes = await detector.detect(videoRef.current);
                             if (barcodes && barcodes.length > 0) {
@@ -63,6 +54,18 @@ function Scanner() {
                     }
                 }, 350);
             }
+        }
+    }, [scanActif]);
+
+    const startCamera = async () => {
+        try {
+            stopCamera();
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+            });
+            streamRef.current = stream;
+            setScanActif(true);
+            setScanMessage("📡 Caméra active — Pointez vers le code-barres ou QR code");
         } catch (e) {
             alert("Accès caméra refusé ou non supporté sur cet appareil : " + e.message + "\n\n💡 Conseils : Utilisez la sélection de photo ou la recherche ci-dessous.");
             setScanActif(false);

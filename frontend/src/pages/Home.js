@@ -810,26 +810,18 @@ function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode
         return () => stopCam();
     }, []);
 
-    const startCam = async () => {
-        try {
-            stopCam();
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
-            });
-            streamRef.current = stream;
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                videoRef.current.play();
-            }
-            setScanActif(true);
-            setStatusMsg("📡 Caméra active — Pointez vers le code-barres");
+    useEffect(() => {
+        if (scanActif && streamRef.current && videoRef.current) {
+            videoRef.current.srcObject = streamRef.current;
+            videoRef.current.setAttribute("playsinline", "true");
+            videoRef.current.play().catch(e => console.log("Play err:", e));
 
             if ("BarcodeDetector" in window) {
                 const detector = new window.BarcodeDetector({
                     formats: ["qr_code", "ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "itf", "data_matrix"]
                 });
                 intervalRef.current = setInterval(async () => {
-                    if (videoRef.current && videoRef.current.readyState === 4) {
+                    if (videoRef.current && videoRef.current.readyState >= 2) {
                         try {
                             const barcodes = await detector.detect(videoRef.current);
                             if (barcodes && barcodes.length > 0) {
@@ -839,10 +831,22 @@ function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode
                             }
                         } catch (e) {}
                     }
-                }, 350);
+                }, 300);
             }
+        }
+    }, [scanActif]);
+
+    const startCam = async () => {
+        try {
+            stopCam();
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+            });
+            streamRef.current = stream;
+            setScanActif(true);
+            setStatusMsg("📡 Caméra active — Placez le code-barres dans le cadre");
         } catch (e) {
-            alert("Caméra non accessible : " + e.message + "\n\nVous pouvez utiliser la sélection photo ou douchette.");
+            alert("Accès à la caméra refusé ou non disponible sur cet appareil : " + e.message + "\n\n💡 Option : Utilisez l'importation de photo ou la douchette USB.");
             setScanActif(false);
         }
     };
@@ -850,6 +854,7 @@ function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode
     const stopCam = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
         if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
         setScanActif(false);
     };
 
@@ -873,7 +878,7 @@ function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode
                     }
                 } catch (e) {}
             }
-            alert("Image chargée. Si le code n'est pas lu automatiquement, tapez la référence ci-dessous.");
+            alert("Photo chargée ! Si la référence n'est pas lue automatiquement, tapez le numéro dans la case.");
         };
     };
 
@@ -889,7 +894,7 @@ function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode
             setStatusMsg(`✅ Produit en stock trouvé : ${match.nom}`);
         } else {
             setTrouve("nouveau");
-            setStatusMsg(`ℹ️ Nouveau code détecté : ${valeur}`);
+            setStatusMsg(`ℹ️ Nouveau code scanné : ${valeur}`);
         }
     };
 
@@ -922,11 +927,20 @@ function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode
                     </div>
                 ) : (
                     <div>
-                        <video ref={videoRef} style={{ width: "100%", maxHeight: "250px", borderRadius: "8px", border: "3px solid #0284c7", objectFit: "cover" }} autoPlay playsInline muted />
+                        <div style={{ position: "relative", width: "100%", height: "250px", background: "#000", borderRadius: "8px", overflow: "hidden", border: "3px solid #0284c7" }}>
+                            <video
+                                ref={videoRef}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                autoPlay
+                                playsInline
+                                muted
+                            />
+                            <div style={{ position: "absolute", top: "50%", left: "10%", width: "80%", height: "2px", background: "#ef4444", boxShadow: "0 0 8px #ef4444", transform: "translateY(-50%)" }} />
+                        </div>
                         <div style={{ textAlign: "center", marginTop: "8px" }}>
                             <span style={{ fontSize: "13px", color: "#0284c7", fontWeight: "bold" }}>{statusMsg}</span>
                             <br/>
-                            <button style={{ marginTop: "6px", padding: "6px 12px", background: "#ef4444", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }} onClick={stopCam}>Stop Caméra</button>
+                            <button style={{ marginTop: "6px", padding: "6px 12px", background: "#ef4444", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }} onClick={stopCam}>⏹ Stop Caméra</button>
                         </div>
                     </div>
                 )}
