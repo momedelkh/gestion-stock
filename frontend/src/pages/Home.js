@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { t } from "../i18n";
 
 function Home() {
@@ -799,84 +799,11 @@ function Home() {
 }
 
 function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode, onEditProduct }) {
-    const [scanActif, setScanActif] = useState(false);
     const [codeSaisi, setCodeSaisi] = useState("");
     const [trouve, setTrouve] = useState(null);
-    const [statusMsg, setStatusMsg] = useState("");
-    const html5QrCodeRef = useRef(null);
+    const [statusMsg, setStatusMsg] = useState("📡 Pointez la caméra vers un code-barres ou QR code...");
 
-    useEffect(() => {
-        return () => {
-            stopCam();
-        };
-    }, []);
-
-    const startCam = () => {
-        setScanActif(true);
-        setStatusMsg("📡 Initialisation de la caméra...");
-        setTimeout(() => {
-            try {
-                const html5QrCode = new Html5Qrcode("modal-reader");
-                html5QrCodeRef.current = html5QrCode;
-                html5QrCode.start(
-                    { facingMode: "environment" },
-                    {
-                        fps: 15,
-                        qrbox: { width: 250, height: 180 }
-                    },
-                    (decodedText) => {
-                        setCodeSaisi(decodedText);
-                        traiterCode(decodedText);
-                        setStatusMsg(`✅ Code scanné : ${decodedText}`);
-                    },
-                    () => {}
-                ).catch(err => {
-                    setStatusMsg("❌ Erreur caméra : " + (err.message || err));
-                });
-            } catch (e) {
-                setStatusMsg("❌ Impossible d'initialiser le scanner.");
-            }
-        }, 150);
-    };
-
-    const stopCam = () => {
-        if (html5QrCodeRef.current) {
-            try {
-                html5QrCodeRef.current.stop().then(() => {
-                    try { html5QrCodeRef.current.clear(); } catch(e){}
-                    html5QrCodeRef.current = null;
-                    setScanActif(false);
-                }).catch(() => {
-                    html5QrCodeRef.current = null;
-                    setScanActif(false);
-                });
-            } catch(e) {
-                html5QrCodeRef.current = null;
-                setScanActif(false);
-            }
-        } else {
-            setScanActif(false);
-        }
-    };
-
-    const scanImage = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        try {
-            const html5QrCode = new Html5Qrcode("temp-image-reader", false);
-            const decodedText = await html5QrCode.scanFile(file, true);
-            if (decodedText) {
-                setCodeSaisi(decodedText);
-                traiterCode(decodedText);
-                setStatusMsg(`✅ Code détecté depuis la photo : ${decodedText}`);
-                alert(`Code-barres détecté sur la photo : ${decodedText}`);
-            }
-        } catch (err) {
-            alert("Aucun code-barres net n'a été détecté sur cette photo. Essayez une photo plus nette ou saisissez le code ci-dessous.");
-        }
-    };
-
-    const traiterCode = (valeur) => {
+    const traiterCode = useCallback((valeur) => {
         const t = (valeur || "").trim().toLowerCase();
         if (!t) return;
         const match = produits.find(p =>
@@ -888,49 +815,69 @@ function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode
             setStatusMsg(`✅ Produit en stock trouvé : ${match.nom}`);
         } else {
             setTrouve("nouveau");
-            setStatusMsg(`ℹ️ Nouveau code scanné : ${valeur}`);
+            setStatusMsg(`ℹ️ Code scanné : ${valeur}`);
         }
-    };
+    }, [produits]);
+
+    useEffect(() => {
+        const formatsToSupport = [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.QR_CODE
+        ];
+
+        let html5QrcodeScanner = null;
+        try {
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader-container-modal",
+                {
+                    fps: 15,
+                    qrbox: { width: 300, height: 180 },
+                    formatsToSupport: formatsToSupport,
+                    rememberLastUsedCamera: true,
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    }
+                },
+                /* verbose= */ false
+            );
+
+            html5QrcodeScanner.render(
+                (decodedText) => {
+                    setCodeSaisi(decodedText);
+                    traiterCode(decodedText);
+                },
+                () => {}
+            );
+        } catch (e) {
+            console.log("Scanner init error:", e);
+        }
+
+        return () => {
+            if (html5QrcodeScanner) {
+                try { html5QrcodeScanner.clear().catch(() => {}); } catch(e){}
+            }
+        };
+    }, [traiterCode]);
 
     return (
         <div style={modalOverlayStyle}>
-            <div style={{ ...modalCardStyle, width: "520px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+            <div style={{ ...modalCardStyle, width: "530px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                     <h3 style={{ margin: 0, color: "#0f172a", fontSize: "18px" }}>📷 Scanner de Code-Barres</h3>
                     <button style={{ border: "none", background: "none", fontSize: "18px", cursor: "pointer" }} onClick={onClose}>✖</button>
                 </div>
 
-                <div id="temp-image-reader" style={{ display: "none" }}></div>
+                <div id="reader-container-modal" style={{ width: "100%", borderRadius: "8px", overflow: "hidden", border: "2px solid #0284c7" }}></div>
 
-                {!scanActif ? (
-                    <div style={{ textAlign: "center", padding: "20px", background: "#f8fafc", borderRadius: "8px", border: "2px dashed #cbd5e1" }}>
-                        <div style={{ fontSize: "40px", marginBottom: "10px" }}>📷</div>
-                        <p style={{ margin: "0 0 15px 0", color: "#64748b", fontSize: "14px" }}>
-                            Scannez par caméra, photo depuis la galerie ou lecteur douchette USB.
-                        </p>
-                        <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
-                            <button
-                                style={{ padding: "12px", background: "linear-gradient(135deg, #0284c7, #2563eb)", color: "white", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "14px" }}
-                                onClick={startCam}
-                            >
-                                ▶ Activer la Caméra & Détecteur
-                            </button>
-                            <label style={{ padding: "10px", background: "#ffffff", color: "#334155", border: "1px solid #cbd5e1", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", textAlign: "center", fontSize: "13px" }}>
-                                🖼️ Scanner photo depuis la Galerie
-                                <input type="file" accept="image/*" capture="environment" onChange={scanImage} style={{ display: "none" }} />
-                            </label>
-                        </div>
-                    </div>
-                ) : (
-                    <div>
-                        <div id="modal-reader" style={{ width: "100%", borderRadius: "8px", overflow: "hidden", border: "3px solid #0284c7", minHeight: "250px" }}></div>
-                        <div style={{ textAlign: "center", marginTop: "8px" }}>
-                            <span style={{ fontSize: "13px", color: "#0284c7", fontWeight: "bold" }}>{statusMsg}</span>
-                            <br/>
-                            <button style={{ marginTop: "6px", padding: "6px 12px", background: "#ef4444", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }} onClick={stopCam}>⏹ Stop Caméra</button>
-                        </div>
-                    </div>
-                )}
+                <div style={{ textAlign: "center", margin: "8px 0", fontSize: "13px", fontWeight: "bold", color: "#0284c7" }}>
+                    {statusMsg}
+                </div>
 
                 <div style={{ marginTop: "15px", borderTop: "1px solid #e2e8f0", paddingTop: "12px" }}>
                     <label style={{ fontSize: "12px", fontWeight: "bold", color: "#475569", display: "block", marginBottom: "4px" }}>

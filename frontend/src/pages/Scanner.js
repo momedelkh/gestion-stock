@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import React, { useState, useEffect, useCallback } from "react";
+import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
 function Scanner() {
     const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
@@ -7,87 +7,11 @@ function Scanner() {
     const [produits, setProduits] = useState([]);
     const [recherche, setRecherche] = useState("");
     const [resultat, setResultat] = useState(null);
-    const [scanActif, setScanActif] = useState(false);
     const [codeManuel, setCodeManuel] = useState("");
-    const [scanMessage, setScanMessage] = useState("");
-    const html5QrCodeRef = useRef(null);
+    const [scanMessage, setScanMessage] = useState("📡 Placez un code-barres devant la caméra ou chargez une photo...");
 
-    useEffect(() => {
-        fetch(`${API}/produits?entreprise=${encodeURIComponent(entreprise)}`)
-            .then(r => r.json())
-            .then(setProduits)
-            .catch(() => {});
-
-        return () => stopCamera();
-    }, []);
-
-    const startCamera = () => {
-        setScanActif(true);
-        setScanMessage("📡 Initialisation de la caméra...");
-        setTimeout(() => {
-            try {
-                const html5QrCode = new Html5Qrcode("page-scanner-reader");
-                html5QrCodeRef.current = html5QrCode;
-                html5QrCode.start(
-                    { facingMode: "environment" },
-                    {
-                        fps: 15,
-                        qrbox: { width: 260, height: 200 }
-                    },
-                    (decodedText) => {
-                        setCodeManuel(decodedText);
-                        rechercherProduit(decodedText);
-                        setScanMessage(`✅ Code scanné : ${decodedText}`);
-                    },
-                    () => {}
-                ).catch(err => {
-                    setScanMessage("❌ Erreur caméra : " + (err.message || err));
-                });
-            } catch (e) {
-                setScanMessage("❌ Impossible de démarrer le scanner.");
-            }
-        }, 150);
-    };
-
-    const stopCamera = () => {
-        if (html5QrCodeRef.current) {
-            try {
-                html5QrCodeRef.current.stop().then(() => {
-                    try { html5QrCodeRef.current.clear(); } catch(e){}
-                    html5QrCodeRef.current = null;
-                    setScanActif(false);
-                }).catch(() => {
-                    html5QrCodeRef.current = null;
-                    setScanActif(false);
-                });
-            } catch(e) {
-                html5QrCodeRef.current = null;
-                setScanActif(false);
-            }
-        } else {
-            setScanActif(false);
-        }
-    };
-
-    const scanImageFile = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        try {
-            const html5QrCode = new Html5Qrcode("page-temp-image-reader", false);
-            const decodedText = await html5QrCode.scanFile(file, true);
-            if (decodedText) {
-                setCodeManuel(decodedText);
-                rechercherProduit(decodedText);
-                setScanMessage(`✅ Code détecté depuis l'image : ${decodedText}`);
-                alert(`Code-barres détecté : ${decodedText}`);
-            }
-        } catch (err) {
-            alert("Aucun code-barres net n'a été détecté sur cette photo. Veuillez sélectionner une photo plus claire.");
-        }
-    };
-
-    const rechercherProduit = (terme) => {
-        const t = terme.trim().toLowerCase();
+    const rechercherProduit = useCallback((terme) => {
+        const t = (terme || "").trim().toLowerCase();
         if (!t) { setResultat(null); return; }
         const trouve = produits.find(p =>
             p.nom?.toLowerCase().includes(t) ||
@@ -96,7 +20,61 @@ function Scanner() {
             p.categorie?.toLowerCase().includes(t)
         );
         setResultat(trouve || "non_trouve");
-    };
+    }, [produits]);
+
+    useEffect(() => {
+        fetch(`${API}/produits?entreprise=${encodeURIComponent(entreprise)}`)
+            .then(r => r.json())
+            .then(setProduits)
+            .catch(() => {});
+    }, [API, entreprise]);
+
+    useEffect(() => {
+        const formatsToSupport = [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.QR_CODE
+        ];
+
+        let html5QrcodeScanner = null;
+        try {
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "page-scanner-reader",
+                {
+                    fps: 15,
+                    qrbox: { width: 300, height: 180 },
+                    formatsToSupport: formatsToSupport,
+                    rememberLastUsedCamera: true,
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    }
+                },
+                /* verbose= */ false
+            );
+
+            html5QrcodeScanner.render(
+                (decodedText) => {
+                    setCodeManuel(decodedText);
+                    rechercherProduit(decodedText);
+                    setScanMessage(`✅ Code scanné : ${decodedText}`);
+                },
+                () => {}
+            );
+        } catch (e) {
+            console.log("Scanner page init error:", e);
+        }
+
+        return () => {
+            if (html5QrcodeScanner) {
+                try { html5QrcodeScanner.clear().catch(() => {}); } catch(e){}
+            }
+        };
+    }, [rechercherProduit]);
 
     const handleCodeManuel = (e) => {
         const val = e.target.value;
@@ -120,7 +98,7 @@ function Scanner() {
         <div style={container}>
             <div style={pageHeader}>
                 <h2 style={{ margin: 0, fontWeight: "normal", color: "#333" }}>📷 Scanner & Identification Rapide</h2>
-                <span style={{ color: "#777", fontSize: "14px" }}>Localisation produit par caméra, photo ou code-barres</span>
+                <span style={{ color: "#777", fontSize: "14px" }}>Localisation produit par caméra ou code-barres</span>
             </div>
 
             {/* Bandeau info */}
@@ -128,46 +106,20 @@ function Scanner() {
                 <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", alignItems: "center" }}>
                     <span>📦 <b>{produits.length}</b> produits enregistrés</span>
                     <span>⚠️ <b style={{ color: "#dd4b39" }}>{alertesRupture.length}</b> en rupture imminente</span>
-                    <span>📷 Mode scanner : <b>{scanActif ? "🟢 Caméra Active" : "⚪ En attente"}</b></span>
+                    <span>📷 Mode scanner : <b>🟢 Caméra Active</b></span>
                 </div>
             </div>
-
-            <div id="page-temp-image-reader" style={{ display: "none" }}></div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
 
                 {/* ZONE SCANNER CAMÉRA & PHOTO */}
                 <div style={{ ...panel, borderTopColor: "#3c8dbc" }}>
-                    <div style={panelHeader}>📷 Scanner par Caméra / Photo (Code-barres & QR)</div>
+                    <div style={panelHeader}>📷 Scanner par Caméra (Code-barres & QR)</div>
                     <div style={panelBody}>
-                        {!scanActif ? (
-                            <div style={cameraPlaceholder}>
-                                <div style={{ fontSize: "50px", marginBottom: "10px" }}>📷</div>
-                                <p style={{ color: "#555", marginBottom: "15px", fontSize: "14px" }}>
-                                    Pointez la caméra de votre téléphone/PC vers un code-barres ou importez une photo.
-                                </p>
-                                <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
-                                    <button style={btnStart} onClick={startCamera}>
-                                        ▶ Démarrer la Caméra & Détecteur
-                                    </button>
-
-                                    <label style={btnPhoto}>
-                                        🖼️ Scanner depuis la Galerie / Photo
-                                        <input type="file" accept="image/*" capture="environment" onChange={scanImageFile} style={{ display: "none" }} />
-                                    </label>
-                                </div>
-                            </div>
-                        ) : (
-                            <div>
-                                <div id="page-scanner-reader" style={{ width: "100%", borderRadius: "8px", overflow: "hidden", border: "3px solid #0284c7", minHeight: "250px" }}></div>
-                                <div style={{ textAlign: "center", marginTop: "10px" }}>
-                                    <p style={{ color: "#0284c7", fontWeight: "bold", fontSize: "13px" }}>
-                                        {scanMessage || "📡 Caméra active — Pointez vers le code-barres"}
-                                    </p>
-                                    <button style={btnStop} onClick={stopCamera}>⏹ Arrêter le Scan</button>
-                                </div>
-                            </div>
-                        )}
+                        <div id="page-scanner-reader" style={{ width: "100%", borderRadius: "8px", overflow: "hidden", border: "2px solid #0284c7" }}></div>
+                        <p style={{ textAlign: "center", color: "#0284c7", fontWeight: "bold", fontSize: "13px", marginTop: "8px" }}>
+                            {scanMessage}
+                        </p>
 
                         <div style={{ marginTop: "20px", borderTop: "1px solid #eee", paddingTop: "15px" }}>
                             <label style={labelStyle}>Saisie manuelle ou Douchette USB :</label>
