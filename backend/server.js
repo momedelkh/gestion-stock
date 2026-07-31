@@ -132,7 +132,20 @@ app.post("/register-company", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.body.email, password: req.body.password }).lean();
+    const { email, password } = req.body;
+
+    // Compte SuperAdmin Maître (Accès à toutes les entreprises & réinitialisation)
+    if ((email && email.toLowerCase() === "admin@tijarapro.com") && password === "admin") {
+      return res.json({ 
+        success: true, 
+        email: "admin@tijarapro.com", 
+        role: "superadmin", 
+        canEdit: true, 
+        entreprise: "TIJARA PRO Master" 
+      });
+    }
+
+    const user = await User.findOne({ email, password }).lean();
     if (user) {
       if (user.role === "technicien_surface") {
         return res.status(403).json({ success: false, message: "Accès refusé. Profil non autorisé au système informatique." });
@@ -142,11 +155,38 @@ app.post("/login", async (req, res) => {
         email: user.email, 
         role: user.role, 
         canEdit: user.canEdit, 
-        entreprise: user.entreprise || "L'Entreprise" 
+        entreprise: user.entreprise || "TIJARA PRO" 
       });
     } else {
       res.status(401).json({ success: false, message: "Identifiants incorrects" });
     }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Récupération de TOUS les utilisateurs (pour le SuperAdmin)
+app.get("/all-users", async (req, res) => {
+  try {
+    const users = await User.find({}, { __v: 0 }).lean();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Réinitialisation du mot de passe par le SuperAdmin
+app.post("/reset-password", async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword) {
+      return res.status(400).json({ error: "L'email et le nouveau mot de passe sont requis." });
+    }
+    const result = await User.updateOne({ email }, { $set: { password: newPassword } });
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Utilisateur non trouvé." });
+    }
+    res.json({ success: true, message: `Mot de passe réinitialisé pour ${email}` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -9,6 +9,7 @@ import CRM from "./pages/CRM";
 import Mouvements from "./pages/Mouvements";
 import CommandesFournisseurs from "./pages/CommandesFournisseurs";
 import Scanner from "./pages/Scanner";
+import SuperAdmin from "./pages/SuperAdmin";
 import { t, getCurrentLang } from "./i18n";
 
 function SidebarLink({ to, icon, label, badge }) {
@@ -85,6 +86,9 @@ function App() {
               <SidebarLink to="/scanner" icon="📷" label={t("Scanner Produit")} />
 
               <div style={menuSection}>GESTION</div>
+              {role === "superadmin" && (
+                <SidebarLink to="/superadmin" icon="👑" label="SuperAdmin & Accès" />
+              )}
               {role === "directeur" && (
                 <SidebarLink to="/rh" icon="👥" label={t("Équipe & Employés")} />
               )}
@@ -134,6 +138,7 @@ function App() {
             <div className="content-area" style={contentArea}>
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/superadmin" element={<SuperAdmin />} />
                 <Route path="/graphique" element={<Graphique />} />
                 <Route path="/rh" element={<RH />} />
                 <Route path="/crm" element={<CRM />} />

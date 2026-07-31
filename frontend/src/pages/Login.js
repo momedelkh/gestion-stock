@@ -214,29 +214,21 @@ function Login() {
                             Connexion Sécurisée 🔐
                         </button>
 
-                        <div style={footerLogin}>
+                        <div style={{ marginTop: "18px", textAlign: "center" }}>
                             <a 
                                 href="#" 
                                 onClick={(e) => { 
                                     e.preventDefault(); 
-                                    alert("Veuillez contacter l'administrateur système (admin@entreprise.com) pour réinitialiser vos accès."); 
+                                    alert("Veuillez contacter le Responsable Général TIJARA PRO (admin@tijarapro.com) pour la réinitialisation de vos accès."); 
                                 }}
                                 style={linkStyle}
                             >
                                 Mot de passe oublié ?
                             </a>
-
-                            <a 
-                                href="#" 
-                                onClick={(e) => { e.preventDefault(); setIsRegistering(true); setError(""); }}
-                                style={{ ...linkStyle, color: "#059669", fontWeight: "700" }}
-                            >
-                                Créer un espace ➕
-                            </a>
                         </div>
 
                         <div style={demoBox}>
-                            Accès Démos : <strong style={{ color: "#0f172a" }}>admin@entreprise.com</strong> (Mdp: admin)
+                            Accès SuperAdmin : <strong style={{ color: "#0f172a" }}>admin@tijarapro.com</strong> (Mdp: <strong style={{ color: "#0f172a" }}>admin</strong>)
                         </div>
                     </>
                 )}
