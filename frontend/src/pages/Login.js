@@ -226,10 +226,6 @@ function Login() {
                                 Mot de passe oublié ?
                             </a>
                         </div>
-
-                        <div style={demoBox}>
-                            Accès SuperAdmin : <strong style={{ color: "#0f172a" }}>admin@tijarapro.com</strong> (Mdp: <strong style={{ color: "#0f172a" }}>admin</strong>)
-                        </div>
                     </>
                 )}
             </div>
