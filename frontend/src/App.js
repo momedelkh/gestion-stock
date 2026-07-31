@@ -35,7 +35,7 @@ function SidebarLink({ to, icon, label, badge }) {
 function App() {
   const user = localStorage.getItem("user");
   const role = localStorage.getItem("role") || "directeur";
-  const entreprise = localStorage.getItem("entreprise") || "L'Entreprise";
+  const entreprise = localStorage.getItem("entreprise") || "TIJARA PRO";
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const lang = getCurrentLang();
 
@@ -56,7 +56,7 @@ function App() {
               <span style={{ fontSize: "32px", marginRight: "12px", textShadow: "0 2px 4px rgba(0,0,0,0.3)" }}>📦</span>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: "1.2", whiteSpace: "nowrap" }}>
                 <span style={{ fontSize: "15px", fontWeight: "900", letterSpacing: "0.5px", color: "#ffffff" }}>{entreprise}</span>
-                <span style={{ fontSize: "10px", fontWeight: "400", color: "#9ac0da", letterSpacing: "0.5px", marginTop: "2px" }}>{t("Gestion de stock")}</span>
+                <span style={{ fontSize: "10px", fontWeight: "400", color: "#9ac0da", letterSpacing: "0.5px", marginTop: "2px" }}>TIJARA PRO</span>
               </div>
             </div>
             <div style={sidebarUser}>
@@ -96,7 +96,7 @@ function App() {
 
             {/* Version tag */}
             <div style={{ padding: "15px", color: "#4a6070", fontSize: "10px", textAlign: "center", marginTop: "auto" }}>
-              ERP v2.1 — © 2025 Gestion Stock
+              TIJARA PRO v2.1 — © 2026 TIJARA PRO
             </div>
           </div>
 

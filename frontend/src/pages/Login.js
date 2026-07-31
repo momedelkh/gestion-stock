@@ -35,7 +35,7 @@ function Login() {
                 localStorage.setItem("user", data.email);
                 localStorage.setItem("role", data.role);
                 localStorage.setItem("canEdit", data.canEdit === true ? "true" : "false");
-                localStorage.setItem("entreprise", data.entreprise || "L'Entreprise");
+                localStorage.setItem("entreprise", data.entreprise || "TIJARA PRO");
                 navigate("/");
                 window.location.reload();
             } else {
@@ -80,9 +80,9 @@ function Login() {
             <div className="login-box" style={box}>
                 
                 <div style={brandSection}>
-                    <div style={icon}>🏢</div>
-                    <h1 style={titleBold}>{isRegistering ? "Création Espace" : "Gestion Stock"}</h1>
-                    <h2 style={titleSmall}>{isRegistering ? "Enregistrer une entreprise" : "Gestion d'entreprise"}</h2>
+                    <div style={icon}>📦</div>
+                    <h1 style={titleBold}>{isRegistering ? "Création Espace" : "TIJARA PRO"}</h1>
+                    <h2 style={titleSmall}>{isRegistering ? "Enregistrer une entreprise" : "Gestion ERP & Stock"}</h2>
                 </div>
 
                 <p style={subtitle}>
