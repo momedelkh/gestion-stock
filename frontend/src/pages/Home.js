@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { t } from "../i18n";
 
 function Home() {
@@ -10,10 +10,12 @@ function Home() {
     
     const [alertesManager, setAlertesManager] = useState([]);
     
-    // Panier de caisse & Facturation
+    // Panier de caisse & Facturation & Scanner Modal
     const [panier, setPanier] = useState([]);
     const [showFactureModal, setShowFactureModal] = useState(false);
     const [derniereFacture, setDerniereFacture] = useState(null);
+    const [showScannerHomeModal, setShowScannerHomeModal] = useState(false);
+    const [scannedResultModal, setScannedResultModal] = useState(null);
 
     const [nom, setNom] = useState("");
     const [prix, setPrix] = useState("");
@@ -546,8 +548,30 @@ function Home() {
 
             {(role === "directeur" || canEdit) && (
                 <div style={{...panel, borderTopColor: "#00a65a"}}>
-                    <div style={{...panelHeader, display: "flex", justifyContent: "space-between"}}>
-                        <span>{editId ? `✏️ ${t("Éditer le produit")}` : `➕ ${t("Référencer un nouveau produit")}`}</span>
+                    <div style={{...panelHeader, display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+                            <span>{editId ? `✏️ ${t("Éditer le produit")}` : `➕ ${t("Référencer un nouveau produit")}`}</span>
+                            <button
+                                type="button"
+                                style={{
+                                    padding: "6px 14px",
+                                    background: "linear-gradient(135deg, #0284c7, #2563eb)",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "6px",
+                                    fontSize: "13px",
+                                    fontWeight: "bold",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    boxShadow: "0 2px 6px rgba(2,132,199,0.3)"
+                                }}
+                                onClick={() => setShowScannerHomeModal(true)}
+                            >
+                                📷 Scanner Code-Barres / Caméra
+                            </button>
+                        </div>
                         {editId && <button style={{border:"none", backgroundColor:"transparent", color:"#999", cursor:"pointer", textDecoration:"underline"}} onClick={reset}>Annuler</button>}
                     </div>
                     <div style={{...panelBody, display: "flex", flexDirection: "column", gap: "10px"}}>
@@ -749,7 +773,216 @@ function Home() {
                     </div>
                 </div>
             )}
+            {/* MODALE SCANNER CODE-BARRES INTERACTIF ET CAMÉRA */}
+            {showScannerHomeModal && (
+                <HomeScannerModal
+                    produits={produits}
+                    onClose={() => setShowScannerHomeModal(false)}
+                    onSelectProduct={(p) => {
+                        ajouterAuPanier(p);
+                        setShowScannerHomeModal(false);
+                    }}
+                    onNewProductCode={(code) => {
+                        setNom(`Produit ${code}`);
+                        setShowScannerHomeModal(false);
+                    }}
+                    onEditProduct={(p) => {
+                        preparerModification(p);
+                        setShowScannerHomeModal(false);
+                    }}
+                />
+            )}
 
+        </div>
+    );
+}
+
+function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode, onEditProduct }) {
+    const [scanActif, setScanActif] = useState(false);
+    const [codeSaisi, setCodeSaisi] = useState("");
+    const [trouve, setTrouve] = useState(null);
+    const [statusMsg, setStatusMsg] = useState("");
+    const videoRef = useRef(null);
+    const streamRef = useRef(null);
+    const intervalRef = useRef(null);
+
+    useEffect(() => {
+        return () => stopCam();
+    }, []);
+
+    const startCam = async () => {
+        try {
+            stopCam();
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+            });
+            streamRef.current = stream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.play();
+            }
+            setScanActif(true);
+            setStatusMsg("📡 Caméra active — Pointez vers le code-barres");
+
+            if ("BarcodeDetector" in window) {
+                const detector = new window.BarcodeDetector({
+                    formats: ["qr_code", "ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "itf", "data_matrix"]
+                });
+                intervalRef.current = setInterval(async () => {
+                    if (videoRef.current && videoRef.current.readyState === 4) {
+                        try {
+                            const barcodes = await detector.detect(videoRef.current);
+                            if (barcodes && barcodes.length > 0) {
+                                const val = barcodes[0].rawValue;
+                                setCodeSaisi(val);
+                                traiterCode(val);
+                            }
+                        } catch (e) {}
+                    }
+                }, 350);
+            }
+        } catch (e) {
+            alert("Caméra non accessible : " + e.message + "\n\nVous pouvez utiliser la sélection photo ou douchette.");
+            setScanActif(false);
+        }
+    };
+
+    const stopCam = () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+        setScanActif(false);
+    };
+
+    const scanImage = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = async () => {
+            if ("BarcodeDetector" in window) {
+                try {
+                    const detector = new window.BarcodeDetector({
+                        formats: ["qr_code", "ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "itf", "data_matrix"]
+                    });
+                    const barcodes = await detector.detect(img);
+                    if (barcodes && barcodes.length > 0) {
+                        const val = barcodes[0].rawValue;
+                        setCodeSaisi(val);
+                        traiterCode(val);
+                        return;
+                    }
+                } catch (e) {}
+            }
+            alert("Image chargée. Si le code n'est pas lu automatiquement, tapez la référence ci-dessous.");
+        };
+    };
+
+    const traiterCode = (valeur) => {
+        const t = (valeur || "").trim().toLowerCase();
+        if (!t) return;
+        const match = produits.find(p =>
+            String(p.id).toLowerCase().includes(t) ||
+            p.nom.toLowerCase().includes(t)
+        );
+        if (match) {
+            setTrouve(match);
+            setStatusMsg(`✅ Produit en stock trouvé : ${match.nom}`);
+        } else {
+            setTrouve("nouveau");
+            setStatusMsg(`ℹ️ Nouveau code détecté : ${valeur}`);
+        }
+    };
+
+    return (
+        <div style={modalOverlayStyle}>
+            <div style={{ ...modalCardStyle, width: "500px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+                    <h3 style={{ margin: 0, color: "#0f172a", fontSize: "18px" }}>📷 Scanner de Code-Barres</h3>
+                    <button style={{ border: "none", background: "none", fontSize: "18px", cursor: "pointer" }} onClick={onClose}>✖</button>
+                </div>
+
+                {!scanActif ? (
+                    <div style={{ textAlign: "center", padding: "20px", background: "#f8fafc", borderRadius: "8px", border: "2px dashed #cbd5e1" }}>
+                        <div style={{ fontSize: "40px", marginBottom: "10px" }}>📷</div>
+                        <p style={{ margin: "0 0 15px 0", color: "#64748b", fontSize: "14px" }}>
+                            Scannez par caméra, photo depuis la galerie ou lecteur douchette USB.
+                        </p>
+                        <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
+                            <button
+                                style={{ padding: "12px", background: "linear-gradient(135deg, #0284c7, #2563eb)", color: "white", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "14px" }}
+                                onClick={startCam}
+                            >
+                                ▶ Activer la Caméra
+                            </button>
+                            <label style={{ padding: "10px", background: "#ffffff", color: "#334155", border: "1px solid #cbd5e1", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", textAlign: "center", fontSize: "13px" }}>
+                                🖼️ Scanner photo depuis la Galerie
+                                <input type="file" accept="image/*" capture="environment" onChange={scanImage} style={{ display: "none" }} />
+                            </label>
+                        </div>
+                    </div>
+                ) : (
+                    <div>
+                        <video ref={videoRef} style={{ width: "100%", maxHeight: "250px", borderRadius: "8px", border: "3px solid #0284c7", objectFit: "cover" }} autoPlay playsInline muted />
+                        <div style={{ textAlign: "center", marginTop: "8px" }}>
+                            <span style={{ fontSize: "13px", color: "#0284c7", fontWeight: "bold" }}>{statusMsg}</span>
+                            <br/>
+                            <button style={{ marginTop: "6px", padding: "6px 12px", background: "#ef4444", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }} onClick={stopCam}>Stop Caméra</button>
+                        </div>
+                    </div>
+                )}
+
+                <div style={{ marginTop: "15px", borderTop: "1px solid #e2e8f0", paddingTop: "12px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: "bold", color: "#475569", display: "block", marginBottom: "4px" }}>
+                        Entrée manuelle / Douchette USB :
+                    </label>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                        <input
+                            style={{ flex: 1, padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "6px", outline: "none" }}
+                            placeholder="Saisissez ou scannez un code..."
+                            value={codeSaisi}
+                            onChange={(e) => {
+                                setCodeSaisi(e.target.value);
+                                traiterCode(e.target.value);
+                            }}
+                            autoFocus
+                        />
+                    </div>
+                </div>
+
+                {trouve && trouve !== "nouveau" && (
+                    <div style={{ marginTop: "15px", padding: "12px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px" }}>
+                        <div style={{ color: "#166534", fontWeight: "bold", fontSize: "14px" }}>✅ Produit trouvé : {trouve.nom}</div>
+                        <div style={{ fontSize: "13px", color: "#374151", margin: "4px 0" }}>Prix : <b>{trouve.prix} FCFA</b> | Stock : <b>{trouve.quantite}</b></div>
+                        <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+                            <button
+                                style={{ flex: 1, padding: "8px", background: "#16a34a", color: "white", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer" }}
+                                onClick={() => onSelectProduct(trouve)}
+                            >
+                                🛒 Ajouter au Panier
+                            </button>
+                            <button
+                                style={{ flex: 1, padding: "8px", background: "#0284c7", color: "white", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer" }}
+                                onClick={() => onEditProduct(trouve)}
+                            >
+                                ✏️ Éditer Fiche
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {trouve === "nouveau" && codeSaisi && (
+                    <div style={{ marginTop: "15px", padding: "12px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "8px" }}>
+                        <div style={{ color: "#1e40af", fontWeight: "bold", fontSize: "13px" }}>ℹ️ Ce code n'existe pas en stock.</div>
+                        <p style={{ margin: "4px 0 10px 0", fontSize: "12px", color: "#3b82f6" }}>Voulez-vous créer une nouvelle fiche avec cette référence ?</p>
+                        <button
+                            style={{ width: "100%", padding: "8px", background: "#2563eb", color: "white", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer" }}
+                            onClick={() => onNewProductCode(codeSaisi)}
+                        >
+                            ➕ Pré-remplir la création de produit
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
