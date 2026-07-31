@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 function SuperAdmin() {
     const [users, setUsers] = useState([]);
@@ -11,6 +11,13 @@ function SuperAdmin() {
     const [nom, setNom] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+
+    // Formulaire des réglages personnels du SuperAdmin
+    const [myNom, setMyNom] = useState("SuperAdmin Maître");
+    const [myEmail, setMyEmail] = useState(localStorage.getItem("userEmail") || "admin@tijarapro.com");
+    const [myPassword, setMyPassword] = useState("admin");
+    const [profileSuccessMsg, setProfileSuccessMsg] = useState("");
+    const [profileErrorMsg, setProfileErrorMsg] = useState("");
 
     const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
 
@@ -84,6 +91,111 @@ function SuperAdmin() {
         }
     };
 
+    const handleUpdateUserEmail = async (user) => {
+        const newEmail = prompt(`Saisissez la nouvelle adresse email pour ${user.nom || "cet utilisateur"} (ancien: ${user.email}) :`, user.email);
+        if (!newEmail || !newEmail.trim() || newEmail.trim() === user.email) return;
+
+        try {
+            setError("");
+            setMessage("");
+            const res = await fetch(`${API}/update-user-email`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: user.id || user._id,
+                    oldEmail: user.email,
+                    newEmail: newEmail.trim()
+                })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setMessage(`L'adresse email a été modifiée avec succès : ${newEmail.trim()}`);
+                fetchAllUsers();
+            } else {
+                alert(data.error || "Erreur lors de la modification de l'email.");
+            }
+        } catch (e) {
+            alert("Erreur de connexion au serveur.");
+        }
+    };
+
+    const handleDeleteCompany = async (companyName) => {
+        if (!companyName) return;
+        const confirmation = window.confirm(
+            `⚠️ ATTENTION ACTION CRITIQUE !\n\nVoulez-vous vraiment supprimer l'entreprise "${companyName}" ainsi que TOUTES ses données (produits, stock, employés, clients et historiques) ?\n\nCette suppression est DEFINITIVE et IRRÉVERSIBLE.`
+        );
+        if (!confirmation) return;
+
+        try {
+            setError("");
+            setMessage("");
+            const res = await fetch(`${API}/delete-company`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ entreprise: companyName })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setMessage(data.message || `L'entreprise "${companyName}" a été supprimée avec succès.`);
+                fetchAllUsers();
+            } else {
+                alert(data.error || "Erreur lors de la suppression de l'entreprise.");
+            }
+        } catch (e) {
+            alert("Erreur lors de la suppression.");
+        }
+    };
+
+    const handleDeleteUser = async (user) => {
+        if (!window.confirm(`Voulez-vous vraiment supprimer l'utilisateur ${user.nom || user.email} ?`)) return;
+        try {
+            const res = await fetch(`${API}/delete-user`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.id || user._id, email: user.email })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setMessage(`L'utilisateur ${user.email} a été supprimé.`);
+                fetchAllUsers();
+            } else {
+                alert(data.error || "Erreur lors de la suppression.");
+            }
+        } catch (e) {
+            alert("Erreur réseau.");
+        }
+    };
+
+    const handleSaveSuperAdminProfile = async (e) => {
+        e.preventDefault();
+        if (!myEmail.trim() || !myPassword.trim()) {
+            setProfileErrorMsg("Veuillez remplir l'email et le mot de passe.");
+            return;
+        }
+        try {
+            setProfileErrorMsg("");
+            setProfileSuccessMsg("");
+            const res = await fetch(`${API}/update-superadmin-profile`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: myEmail.trim(),
+                    password: myPassword.trim(),
+                    newNom: myNom.trim()
+                })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setProfileSuccessMsg("Vos identifiants SuperAdmin ont été enregistrés avec succès ! Utilise-les lors de vos prochaines connexions.");
+                localStorage.setItem("userEmail", myEmail.trim());
+            } else {
+                setProfileErrorMsg(data.error || "Erreur de mise à jour des réglages.");
+            }
+        } catch (e) {
+            setProfileErrorMsg("Erreur de connexion au serveur.");
+        }
+    };
+
     const switchCompanyView = (compName) => {
         localStorage.setItem("entreprise", compName);
         alert(`Vous consultez désormais l'espace de l'entreprise : "${compName}"`);
@@ -96,15 +208,19 @@ function SuperAdmin() {
         (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Extraction des entreprises uniques pour affichage et gestion
+    const entreprisesUniques = Array.from(new Set(users.map(u => u.entreprise).filter(Boolean)));
+
     return (
         <div style={container}>
+            {/* EN-TÊTE SUPERADMIN */}
             <div style={headerCard}>
                 <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
                     <div style={badgeIcon}>👑</div>
                     <div>
                         <h1 style={{ margin: "0", fontSize: "24px", color: "#0f172a" }}>Console SuperAdmin — TIJARA PRO</h1>
                         <p style={{ margin: "4px 0 0 0", color: "#64748b", fontSize: "14px" }}>
-                            Gestion centralisée de toutes les entreprises, création d'espaces & réinitialisation des mots de passe.
+                            Gestion globale des entreprises, modification des emails, suppression des comptes & réglages SuperAdmin.
                         </p>
                     </div>
                 </div>
@@ -114,10 +230,54 @@ function SuperAdmin() {
             {error && <div style={errorBanner}>⚠️ {error}</div>}
 
             <div style={grid}>
-                {/* FORMULAIRE SÉCURISÉ DE CRÉATION D'ENTREPRISE */}
+                {/* 1. NOUVEAU : RÉGLAGES DU PROFIL SUPERADMIN */}
+                <div style={card}>
+                    <h2 style={cardTitle}>⚙️ Mes Réglages SuperAdmin</h2>
+                    <p style={cardSubtitle}>Modifiez votre propre email et mot de passe de connexion SuperAdmin.</p>
+
+                    {profileSuccessMsg && <div style={{ ...successBanner, fontSize: "12px", padding: "8px 12px" }}>✅ {profileSuccessMsg}</div>}
+                    {profileErrorMsg && <div style={{ ...errorBanner, fontSize: "12px", padding: "8px 12px" }}>⚠️ {profileErrorMsg}</div>}
+
+                    <form onSubmit={handleSaveSuperAdminProfile}>
+                        <div style={fieldGroup}>
+                            <label style={label}>Mon Nom / Identité</label>
+                            <input
+                                style={input}
+                                value={myNom}
+                                onChange={(e) => setMyNom(e.target.value)}
+                            />
+                        </div>
+
+                        <div style={fieldGroup}>
+                            <label style={label}>Mon Email SuperAdmin</label>
+                            <input
+                                style={input}
+                                type="email"
+                                value={myEmail}
+                                onChange={(e) => setMyEmail(e.target.value)}
+                            />
+                        </div>
+
+                        <div style={fieldGroup}>
+                            <label style={label}>Nouveau Mot de passe SuperAdmin</label>
+                            <input
+                                style={input}
+                                type="text"
+                                value={myPassword}
+                                onChange={(e) => setMyPassword(e.target.value)}
+                            />
+                        </div>
+
+                        <button type="submit" style={settingsBtn}>
+                            💾 Enregistrer Mes Identifiants
+                        </button>
+                    </form>
+                </div>
+
+                {/* 2. FORMULAIRE DE CRÉATION D'ENTREPRISE */}
                 <div style={card}>
                     <h2 style={cardTitle}>🏢 Créer un Nouvel Espace Entreprise</h2>
-                    <p style={cardSubtitle}>Seul le SuperAdmin a l'autorité de créer des nouveaux comptes d'entreprise.</p>
+                    <p style={cardSubtitle}>Création directe d'un accès Directeur pour une nouvelle société.</p>
 
                     <form onSubmit={createCompanyByAdmin}>
                         <div style={fieldGroup}>
@@ -163,33 +323,56 @@ function SuperAdmin() {
                         </div>
 
                         <button type="submit" style={primaryBtn}>
-                            🚀 Valider et Créer l'Espace Entreprise
+                            🚀 Valider et Créer l'Entreprise
                         </button>
                     </form>
                 </div>
 
-                {/* LISTE & GESTION DES MOTS DE PASSE TOUTES ENTREPRISES */}
-                <div style={{ ...card, flex: 2 }}>
+                {/* 3. REPERTOIRE ENTREPRISES & COMPTES UTILISATEURS */}
+                <div style={{ ...card, flex: "1 1 100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px", flexWrap: "wrap", gap: "10px" }}>
                         <div>
-                            <h2 style={cardTitle}>🔑 Répertoire Général & Réinitialisation</h2>
-                            <p style={cardSubtitle}>Consultez ou modifiez les accès de n'importe quelle entreprise en cas d'oubli.</p>
+                            <h2 style={cardTitle}>🔑 Répertoire Général, Mails & Entreprises ({users.length})</h2>
+                            <p style={cardSubtitle}>Gérez les emails, réinitialisez les mots de passe et supprimez les entreprises si besoin.</p>
                         </div>
                         <input
-                            style={{ ...input, width: "240px", padding: "8px 12px" }}
-                            placeholder="🔍 Chercher entreprise, nom..."
+                            style={{ ...input, width: "260px", padding: "8px 12px" }}
+                            placeholder="🔍 Chercher entreprise, nom, mail..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
+
+                    {/* BANDEAU GESTION RAPIDE DES ENTREPRISES */}
+                    {entreprisesUniques.length > 0 && (
+                        <div style={{ background: "#f8fafc", padding: "12px 15px", borderRadius: "8px", border: "1px solid #e2e8f0", marginBottom: "15px" }}>
+                            <span style={{ fontSize: "12px", fontWeight: "bold", color: "#475569", textTransform: "uppercase", display: "block", marginBottom: "8px" }}>
+                                🗑️ Suppression d'Entreprises ({entreprisesUniques.length}) :
+                            </span>
+                            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                                {entreprisesUniques.map(entName => (
+                                    <div key={entName} style={{ display: "flex", alignItems: "center", background: "#ffffff", padding: "6px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", gap: "8px" }}>
+                                        <span style={{ fontWeight: "bold", fontSize: "13px", color: "#0f172a" }}>🏢 {entName}</span>
+                                        <button
+                                            style={{ padding: "3px 8px", background: "#ef4444", color: "white", border: "none", borderRadius: "4px", fontSize: "11px", fontWeight: "bold", cursor: "pointer" }}
+                                            onClick={() => handleDeleteCompany(entName)}
+                                            title="Supprimer l'entreprise et toutes ses données"
+                                        >
+                                            🗑️ Supprimer
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <div style={tableWrapper}>
                         <table style={table}>
                             <thead>
                                 <tr style={thRow}>
                                     <th style={th}>Entreprise</th>
-                                    <th style={th}>Utilisateur / Poste</th>
-                                    <th style={th}>Email</th>
+                                    <th style={th}>Utilisateur / Role</th>
+                                    <th style={th}>Email (Modifiable)</th>
                                     <th style={th}>Mot de Passe</th>
                                     <th style={th}>Actions SuperAdmin</th>
                                 </tr>
@@ -203,20 +386,38 @@ function SuperAdmin() {
                                     </tr>
                                 ) : (
                                     filteredUsers.map((u, i) => (
-                                        <tr key={u.id || i} style={tr}>
+                                        <tr key={u.id || u._id || i} style={tr}>
                                             <td style={td}>
                                                 <strong style={{ color: "#0284c7" }}>{u.entreprise || "TIJARA PRO"}</strong>
+                                                <br/>
+                                                <button
+                                                    onClick={() => handleDeleteCompany(u.entreprise)}
+                                                    style={{ background: "none", border: "none", color: "#ef4444", fontSize: "11px", cursor: "pointer", padding: 0, textDecoration: "underline" }}
+                                                >
+                                                    🗑️ Supprimer Entreprise
+                                                </button>
                                             </td>
                                             <td style={td}>
                                                 <div style={{ fontWeight: "600", color: "#0f172a" }}>{u.nom || "Utilisateur"}</div>
                                                 <span style={badgeRole}>{u.poste || u.role || "Directeur"}</span>
                                             </td>
-                                            <td style={td}>{u.email}</td>
+                                            <td style={td}>
+                                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                                    <span>{u.email}</span>
+                                                    <button
+                                                        onClick={() => handleUpdateUserEmail(u)}
+                                                        style={editEmailBtn}
+                                                        title="Modifier cette adresse email"
+                                                    >
+                                                        ✏️ Modif Mail
+                                                    </button>
+                                                </div>
+                                            </td>
                                             <td style={td}>
                                                 <code style={codeBg}>{u.password || "••••••••"}</code>
                                             </td>
                                             <td style={td}>
-                                                <div style={{ display: "flex", gap: "6px" }}>
+                                                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                                                     <button
                                                         onClick={() => handleResetPassword(u.email)}
                                                         style={resetBtn}
@@ -230,6 +431,13 @@ function SuperAdmin() {
                                                         title="Inspecter cet espace entreprise"
                                                     >
                                                         🏢 Consulter
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteUser(u)}
+                                                        style={deleteUserBtn}
+                                                        title="Supprimer cet utilisateur"
+                                                    >
+                                                        ❌ Supprimer
                                                     </button>
                                                 </div>
                                             </td>
@@ -333,6 +541,19 @@ const primaryBtn = {
     boxShadow: "0 4px 12px rgba(2, 132, 199, 0.3)"
 };
 
+const settingsBtn = {
+    width: "100%",
+    padding: "12px",
+    background: "linear-gradient(135deg, #10b981, #059669)",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: "8px",
+    fontSize: "14px",
+    fontWeight: "700",
+    cursor: "pointer",
+    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)"
+};
+
 const tableWrapper = {
     overflowX: "auto"
 };
@@ -395,11 +616,33 @@ const resetBtn = {
     fontWeight: "600"
 };
 
+const editEmailBtn = {
+    padding: "3px 8px",
+    background: "#f1f5f9",
+    color: "#0284c7",
+    border: "1px solid #bae6fd",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "11px",
+    fontWeight: "600"
+};
+
 const switchBtn = {
     padding: "6px 10px",
     background: "#f1f5f9",
     color: "#334155",
     border: "1px solid #cbd5e1",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "12px",
+    fontWeight: "600"
+};
+
+const deleteUserBtn = {
+    padding: "6px 10px",
+    background: "#fef2f2",
+    color: "#ef4444",
+    border: "1px solid #fca5a5",
     borderRadius: "6px",
     cursor: "pointer",
     fontSize: "12px",

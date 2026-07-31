@@ -216,6 +216,101 @@ app.post("/reset-password", async (req, res) => {
   }
 });
 
+// Route SuperAdmin: Modification de l'email d'un utilisateur
+app.post("/update-user-email", async (req, res) => {
+  try {
+    const { userId, oldEmail, newEmail } = req.body;
+    if (!newEmail || !newEmail.trim()) {
+      return res.status(400).json({ error: "Le nouvel email est requis." });
+    }
+    let user = null;
+    if (userId) {
+      user = await User.findOne(getFlexibleIdFilter(userId, req));
+    }
+    if (!user && oldEmail) {
+      user = await User.findOne({ email: oldEmail });
+    }
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur introuvable." });
+    }
+    user.email = newEmail.trim();
+    await user.save();
+    res.json({ success: true, message: `Email mis à jour avec succès : ${user.email}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Route SuperAdmin: Suppression d'une entreprise complète
+app.post("/delete-company", async (req, res) => {
+  try {
+    const { entreprise } = req.body;
+    if (!entreprise || !entreprise.trim()) {
+      return res.status(400).json({ error: "Nom de l'entreprise requis." });
+    }
+    const entTarget = entreprise.trim();
+    await Produit.deleteMany({ entreprise: entTarget });
+    await User.deleteMany({ entreprise: entTarget });
+    await Log.deleteMany({ entreprise: entTarget });
+    await Alert.deleteMany({ entreprise: entTarget });
+    await Client.deleteMany({ entreprise: entTarget });
+    await Commande.deleteMany({ entreprise: entTarget });
+
+    res.json({ success: true, message: `L'entreprise "${entTarget}" et toutes ses données ont été supprimées.` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Route SuperAdmin: Mise à jour du profil / réglages du SuperAdmin lui-même
+app.post("/update-superadmin-profile", async (req, res) => {
+  try {
+    const { email, password, newNom } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: "L'email et le mot de passe sont requis." });
+    }
+    let superAdmin = await User.findOne({ role: "superadmin" });
+    if (!superAdmin) {
+      superAdmin = new User({
+        id: 1,
+        nom: newNom || "SuperAdmin Master",
+        email: email.trim(),
+        password: password.trim(),
+        role: "superadmin",
+        canEdit: true,
+        entreprise: "TIJARA PRO Master"
+      });
+    } else {
+      superAdmin.email = email.trim();
+      superAdmin.password = password.trim();
+      if (newNom) superAdmin.nom = newNom.trim();
+    }
+    await superAdmin.save();
+    res.json({ success: true, message: "Réglages SuperAdmin enregistrés avec succès !", superAdmin });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Route SuperAdmin: Suppression d'un utilisateur unique
+app.post("/delete-user", async (req, res) => {
+  try {
+    const { userId, email } = req.body;
+    let filter = {};
+    if (userId) {
+      filter = getFlexibleIdFilter(userId, req);
+    } else if (email) {
+      filter = { email };
+    } else {
+      return res.status(400).json({ error: "ID ou email requis." });
+    }
+    await User.deleteOne(filter);
+    res.json({ success: true, message: "Utilisateur supprimé." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get("/users", async (req, res) => {
   try {
     const users = await User.find(getQueryFilter(req), { __v: 0 }).lean();
