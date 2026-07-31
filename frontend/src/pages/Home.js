@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { Html5Qrcode } from "html5-qrcode";
 import { t } from "../i18n";
 
 function Home() {
@@ -802,84 +803,77 @@ function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode
     const [codeSaisi, setCodeSaisi] = useState("");
     const [trouve, setTrouve] = useState(null);
     const [statusMsg, setStatusMsg] = useState("");
-    const videoRef = useRef(null);
-    const streamRef = useRef(null);
-    const intervalRef = useRef(null);
+    const html5QrCodeRef = useRef(null);
 
     useEffect(() => {
-        return () => stopCam();
+        return () => {
+            stopCam();
+        };
     }, []);
 
-    useEffect(() => {
-        if (scanActif && streamRef.current && videoRef.current) {
-            videoRef.current.srcObject = streamRef.current;
-            videoRef.current.setAttribute("playsinline", "true");
-            videoRef.current.play().catch(e => console.log("Play err:", e));
-
-            if ("BarcodeDetector" in window) {
-                const detector = new window.BarcodeDetector({
-                    formats: ["qr_code", "ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "itf", "data_matrix"]
+    const startCam = () => {
+        setScanActif(true);
+        setStatusMsg("📡 Initialisation de la caméra...");
+        setTimeout(() => {
+            try {
+                const html5QrCode = new Html5Qrcode("modal-reader");
+                html5QrCodeRef.current = html5QrCode;
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 15,
+                        qrbox: { width: 250, height: 180 }
+                    },
+                    (decodedText) => {
+                        setCodeSaisi(decodedText);
+                        traiterCode(decodedText);
+                        setStatusMsg(`✅ Code scanné : ${decodedText}`);
+                    },
+                    () => {}
+                ).catch(err => {
+                    setStatusMsg("❌ Erreur caméra : " + (err.message || err));
                 });
-                intervalRef.current = setInterval(async () => {
-                    if (videoRef.current && videoRef.current.readyState >= 2) {
-                        try {
-                            const barcodes = await detector.detect(videoRef.current);
-                            if (barcodes && barcodes.length > 0) {
-                                const val = barcodes[0].rawValue;
-                                setCodeSaisi(val);
-                                traiterCode(val);
-                            }
-                        } catch (e) {}
-                    }
-                }, 300);
+            } catch (e) {
+                setStatusMsg("❌ Impossible d'initialiser le scanner.");
             }
-        }
-    }, [scanActif]);
-
-    const startCam = async () => {
-        try {
-            stopCam();
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
-            });
-            streamRef.current = stream;
-            setScanActif(true);
-            setStatusMsg("📡 Caméra active — Placez le code-barres dans le cadre");
-        } catch (e) {
-            alert("Accès à la caméra refusé ou non disponible sur cet appareil : " + e.message + "\n\n💡 Option : Utilisez l'importation de photo ou la douchette USB.");
-            setScanActif(false);
-        }
+        }, 150);
     };
 
     const stopCam = () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
-        streamRef.current = null;
-        setScanActif(false);
+        if (html5QrCodeRef.current) {
+            try {
+                html5QrCodeRef.current.stop().then(() => {
+                    try { html5QrCodeRef.current.clear(); } catch(e){}
+                    html5QrCodeRef.current = null;
+                    setScanActif(false);
+                }).catch(() => {
+                    html5QrCodeRef.current = null;
+                    setScanActif(false);
+                });
+            } catch(e) {
+                html5QrCodeRef.current = null;
+                setScanActif(false);
+            }
+        } else {
+            setScanActif(false);
+        }
     };
 
     const scanImage = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const img = new Image();
-        img.src = URL.createObjectURL(file);
-        img.onload = async () => {
-            if ("BarcodeDetector" in window) {
-                try {
-                    const detector = new window.BarcodeDetector({
-                        formats: ["qr_code", "ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "itf", "data_matrix"]
-                    });
-                    const barcodes = await detector.detect(img);
-                    if (barcodes && barcodes.length > 0) {
-                        const val = barcodes[0].rawValue;
-                        setCodeSaisi(val);
-                        traiterCode(val);
-                        return;
-                    }
-                } catch (e) {}
+        try {
+            const html5QrCode = new Html5Qrcode("temp-image-reader", false);
+            const decodedText = await html5QrCode.scanFile(file, true);
+            if (decodedText) {
+                setCodeSaisi(decodedText);
+                traiterCode(decodedText);
+                setStatusMsg(`✅ Code détecté depuis la photo : ${decodedText}`);
+                alert(`Code-barres détecté sur la photo : ${decodedText}`);
             }
-            alert("Photo chargée ! Si la référence n'est pas lue automatiquement, tapez le numéro dans la case.");
-        };
+        } catch (err) {
+            alert("Aucun code-barres net n'a été détecté sur cette photo. Essayez une photo plus nette ou saisissez le code ci-dessous.");
+        }
     };
 
     const traiterCode = (valeur) => {
@@ -900,11 +894,13 @@ function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode
 
     return (
         <div style={modalOverlayStyle}>
-            <div style={{ ...modalCardStyle, width: "500px" }}>
+            <div style={{ ...modalCardStyle, width: "520px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
                     <h3 style={{ margin: 0, color: "#0f172a", fontSize: "18px" }}>📷 Scanner de Code-Barres</h3>
                     <button style={{ border: "none", background: "none", fontSize: "18px", cursor: "pointer" }} onClick={onClose}>✖</button>
                 </div>
+
+                <div id="temp-image-reader" style={{ display: "none" }}></div>
 
                 {!scanActif ? (
                     <div style={{ textAlign: "center", padding: "20px", background: "#f8fafc", borderRadius: "8px", border: "2px dashed #cbd5e1" }}>
@@ -917,7 +913,7 @@ function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode
                                 style={{ padding: "12px", background: "linear-gradient(135deg, #0284c7, #2563eb)", color: "white", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "14px" }}
                                 onClick={startCam}
                             >
-                                ▶ Activer la Caméra
+                                ▶ Activer la Caméra & Détecteur
                             </button>
                             <label style={{ padding: "10px", background: "#ffffff", color: "#334155", border: "1px solid #cbd5e1", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", textAlign: "center", fontSize: "13px" }}>
                                 🖼️ Scanner photo depuis la Galerie
@@ -927,16 +923,7 @@ function HomeScannerModal({ produits, onClose, onSelectProduct, onNewProductCode
                     </div>
                 ) : (
                     <div>
-                        <div style={{ position: "relative", width: "100%", height: "250px", background: "#000", borderRadius: "8px", overflow: "hidden", border: "3px solid #0284c7" }}>
-                            <video
-                                ref={videoRef}
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                autoPlay
-                                playsInline
-                                muted
-                            />
-                            <div style={{ position: "absolute", top: "50%", left: "10%", width: "80%", height: "2px", background: "#ef4444", boxShadow: "0 0 8px #ef4444", transform: "translateY(-50%)" }} />
-                        </div>
+                        <div id="modal-reader" style={{ width: "100%", borderRadius: "8px", overflow: "hidden", border: "3px solid #0284c7", minHeight: "250px" }}></div>
                         <div style={{ textAlign: "center", marginTop: "8px" }}>
                             <span style={{ fontSize: "13px", color: "#0284c7", fontWeight: "bold" }}>{statusMsg}</span>
                             <br/>

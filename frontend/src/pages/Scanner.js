@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Html5Qrcode } from "html5-qrcode";
 
 function Scanner() {
     const API = process.env.REACT_APP_API_URL || "https://gestion-stock-de-mon-entreprise.onrender.com";
@@ -8,11 +9,8 @@ function Scanner() {
     const [resultat, setResultat] = useState(null);
     const [scanActif, setScanActif] = useState(false);
     const [codeManuel, setCodeManuel] = useState("");
-    const [cameraDispo, setCameraDispo] = useState(true);
     const [scanMessage, setScanMessage] = useState("");
-    const videoRef = useRef(null);
-    const streamRef = useRef(null);
-    const scanLoopRef = useRef(null);
+    const html5QrCodeRef = useRef(null);
 
     useEffect(() => {
         fetch(`${API}/produits?entreprise=${encodeURIComponent(entreprise)}`)
@@ -20,93 +18,72 @@ function Scanner() {
             .then(setProduits)
             .catch(() => {});
 
-        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-            navigator.mediaDevices.enumerateDevices().then(devices => {
-                const hasVid = devices.some(d => d.kind === "videoinput");
-                setCameraDispo(hasVid || true);
-            }).catch(() => setCameraDispo(true));
-        }
-
         return () => stopCamera();
     }, []);
 
-    useEffect(() => {
-        if (scanActif && streamRef.current && videoRef.current) {
-            videoRef.current.srcObject = streamRef.current;
-            videoRef.current.setAttribute("playsinline", "true");
-            videoRef.current.play().catch(e => console.log("Play error:", e));
-
-            if ("BarcodeDetector" in window) {
-                const detector = new window.BarcodeDetector({
-                    formats: ["qr_code", "ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "itf", "data_matrix"]
+    const startCamera = () => {
+        setScanActif(true);
+        setScanMessage("📡 Initialisation de la caméra...");
+        setTimeout(() => {
+            try {
+                const html5QrCode = new Html5Qrcode("page-scanner-reader");
+                html5QrCodeRef.current = html5QrCode;
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 15,
+                        qrbox: { width: 260, height: 200 }
+                    },
+                    (decodedText) => {
+                        setCodeManuel(decodedText);
+                        rechercherProduit(decodedText);
+                        setScanMessage(`✅ Code scanné : ${decodedText}`);
+                    },
+                    () => {}
+                ).catch(err => {
+                    setScanMessage("❌ Erreur caméra : " + (err.message || err));
                 });
-                scanLoopRef.current = setInterval(async () => {
-                    if (videoRef.current && videoRef.current.readyState >= 2) {
-                        try {
-                            const barcodes = await detector.detect(videoRef.current);
-                            if (barcodes && barcodes.length > 0) {
-                                const codeScanne = barcodes[0].rawValue;
-                                setCodeManuel(codeScanne);
-                                setScanMessage(`✅ Code scanné : ${codeScanne}`);
-                                rechercherProduit(codeScanne);
-                            }
-                        } catch (err) {}
-                    }
-                }, 350);
+            } catch (e) {
+                setScanMessage("❌ Impossible de démarrer le scanner.");
             }
-        }
-    }, [scanActif]);
-
-    const startCamera = async () => {
-        try {
-            stopCamera();
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
-            });
-            streamRef.current = stream;
-            setScanActif(true);
-            setScanMessage("📡 Caméra active — Pointez vers le code-barres ou QR code");
-        } catch (e) {
-            alert("Accès caméra refusé ou non supporté sur cet appareil : " + e.message + "\n\n💡 Conseils : Utilisez la sélection de photo ou la recherche ci-dessous.");
-            setScanActif(false);
-        }
+        }, 150);
     };
 
     const stopCamera = () => {
-        if (scanLoopRef.current) {
-            clearInterval(scanLoopRef.current);
-            scanLoopRef.current = null;
+        if (html5QrCodeRef.current) {
+            try {
+                html5QrCodeRef.current.stop().then(() => {
+                    try { html5QrCodeRef.current.clear(); } catch(e){}
+                    html5QrCodeRef.current = null;
+                    setScanActif(false);
+                }).catch(() => {
+                    html5QrCodeRef.current = null;
+                    setScanActif(false);
+                });
+            } catch(e) {
+                html5QrCodeRef.current = null;
+                setScanActif(false);
+            }
+        } else {
+            setScanActif(false);
         }
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(t => t.stop());
-            streamRef.current = null;
-        }
-        setScanActif(false);
     };
 
     const scanImageFile = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const img = new Image();
-        img.src = URL.createObjectURL(file);
-        img.onload = async () => {
-            if ("BarcodeDetector" in window) {
-                try {
-                    const detector = new window.BarcodeDetector({
-                        formats: ["qr_code", "ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "itf", "data_matrix"]
-                    });
-                    const barcodes = await detector.detect(img);
-                    if (barcodes && barcodes.length > 0) {
-                        const code = barcodes[0].rawValue;
-                        setCodeManuel(code);
-                        rechercherProduit(code);
-                        setScanMessage(`✅ Code détecté depuis l'image : ${code}`);
-                        return;
-                    }
-                } catch (err) {}
+        try {
+            const html5QrCode = new Html5Qrcode("page-temp-image-reader", false);
+            const decodedText = await html5QrCode.scanFile(file, true);
+            if (decodedText) {
+                setCodeManuel(decodedText);
+                rechercherProduit(decodedText);
+                setScanMessage(`✅ Code détecté depuis l'image : ${decodedText}`);
+                alert(`Code-barres détecté : ${decodedText}`);
             }
-            alert("Image analysée. Si le code n'est pas extrait automatiquement, saisissez la référence manuellement ci-dessous.");
-        };
+        } catch (err) {
+            alert("Aucun code-barres net n'a été détecté sur cette photo. Veuillez sélectionner une photo plus claire.");
+        }
     };
 
     const rechercherProduit = (terme) => {
@@ -155,6 +132,8 @@ function Scanner() {
                 </div>
             </div>
 
+            <div id="page-temp-image-reader" style={{ display: "none" }}></div>
+
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
 
                 {/* ZONE SCANNER CAMÉRA & PHOTO */}
@@ -169,7 +148,7 @@ function Scanner() {
                                 </p>
                                 <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
                                     <button style={btnStart} onClick={startCamera}>
-                                        ▶ Démarrer la Caméra
+                                        ▶ Démarrer la Caméra & Détecteur
                                     </button>
 
                                     <label style={btnPhoto}>
@@ -180,11 +159,7 @@ function Scanner() {
                             </div>
                         ) : (
                             <div>
-                                <video
-                                    ref={videoRef}
-                                    style={{ width: "100%", maxHeight: "300px", borderRadius: "8px", border: "3px solid #0284c7", objectFit: "cover" }}
-                                    autoPlay playsInline muted
-                                />
+                                <div id="page-scanner-reader" style={{ width: "100%", borderRadius: "8px", overflow: "hidden", border: "3px solid #0284c7", minHeight: "250px" }}></div>
                                 <div style={{ textAlign: "center", marginTop: "10px" }}>
                                     <p style={{ color: "#0284c7", fontWeight: "bold", fontSize: "13px" }}>
                                         {scanMessage || "📡 Caméra active — Pointez vers le code-barres"}
